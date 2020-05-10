@@ -57,13 +57,13 @@ extern void ATM_playroutine() asm("ATM_playroutine");
 
 #ifndef AB_ALTERNATE_WIRING
 #define ATMLIB_CONSTRUCT_ISR(TARGET_REGISTER) \
-uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count; \
+uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count;    /* uint16_t cia, cia_count;                             */ \
 ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(TIMER4_OVF_vect) {                               */ \
   asm volatile( \
                 "push r2                                            \n"                                                            \
                 "in   r2,                    __SREG__               \n"                                                            \
                 "push r18                                           \n"                                                            \
-                "lds  r18,                   half                   \n" /* half = ~half;                                        */ \
+                "lds  r18,                   half                   \n" /* half = !half;                                        */ \
                 "com  r18                                           \n"                                                            \
                 "sts  half,                  r18                    \n"                                                            \
                 "breq 1f                                            \n" /* if (half) return;                                    */ \
@@ -104,7 +104,7 @@ ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(T
                 \
                 \
                 "lds  r27,                   osc+0*%[mul]+%[vol]    \n" /* int8_t vol0 = osc[0].vol;                            */ \
-                "cpi  r18,                   192                    \n" /* if ((osc[0].phase >= 0xC000) vol0 = -vol0;           */ \
+                "cpi  r18,                   192                    \n" /* if (uint8_t(osc[0].phase >> 8) >= 192) vol0 = -vol0; */ \
                 "brcs 2f                                            \n"                                                            \
                 "neg  r27                                           \n"                                                            \
                 "2:                                                 \n"                                                            \
