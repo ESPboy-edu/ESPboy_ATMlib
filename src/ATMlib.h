@@ -137,7 +137,7 @@ ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(T
                 "sts  osc+3*%[mul]+%[fre]+1, r1                     \n"                                                            \
                 \
                 "lds  r27,                   osc+3*%[mul]+%[vol]    \n" /* int8_t vol3 = osc[3].vol;                            */ \
-                "sbrc r1,                    7                      \n" /* if (freq & 0xc8000) vol3 = -vol3;                    */ \
+                "sbrc r1,                    7                      \n" /* if (freq & 0x8000) vol3 = -vol3;                     */ \
                 "neg  r27                                           \n"                                                            \
                 "add  r26,                   r27                    \n" /* vol += vol3;                                         */ \
                 \
