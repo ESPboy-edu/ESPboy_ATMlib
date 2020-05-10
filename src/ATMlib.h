@@ -58,141 +58,141 @@ extern void ATM_playroutine() asm("ATM_playroutine");
 #ifndef AB_ALTERNATE_WIRING
 #define ATMLIB_CONSTRUCT_ISR(TARGET_REGISTER) \
 uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count; \
-ISR(TIMER4_OVF_vect, ISR_NAKED) { \
+ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(TIMER4_OVF_vect) {                               */ \
   asm volatile( \
-                "push r2                                          " "\n\t" \
-                "in   r2,                    __SREG__             " "\n\t" \
-                "push r18                                         " "\n\t" \
-                "lds  r18,                   half                 " "\n\t" \
-                "com  r18                                         " "\n\t" \
-                "sts  half,                  r18                  " "\n\t" \
-                "breq 1f                                          " "\n\t" \
-                "rjmp 3f                                          " "\n\t" \
-                "1:                                               " "\n\t" \
-                "push r27                                         " "\n\t" \
-                "push r26                                         " "\n\t" \
-                "push r0                                          " "\n\t" \
-                "push r1                                          " "\n\t" \
+                "push r2                                            \n"                                                            \
+                "in   r2,                    __SREG__               \n"                                                            \
+                "push r18                                           \n"                                                            \
+                "lds  r18,                   half                   \n" /* half = ~half;                                        */ \
+                "com  r18                                           \n"                                                            \
+                "sts  half,                  r18                    \n"                                                            \
+                "breq 1f                                            \n" /* if (half) return;                                    */ \
+                "rjmp 4f                                            \n"                                                            \
+                "1:                                                 \n"                                                            \
+                "push r27                                           \n"                                                            \
+                "push r26                                           \n"                                                            \
+                "push r0                                            \n"                                                            \
+                "push r1                                            \n"                                                            \
                 \
-                "lds  r18,                   osc+2*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+2*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+2*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+2*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+2*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+2*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r18,                   osc+2*%[mul]+%[fre]    \n" /* osc[2].phase += osc[2].freq;// update triangle phase */ \
+                "lds  r0,                    osc+2*%[mul]+%[pha]    \n"                                                            \
+                "add  r0,                    r18                    \n"                                                            \
+                "sts  osc+2*%[mul]+%[pha],   r0                     \n"                                                            \
+                "lds  r18,                   osc+2*%[mul]+%[fre]+1  \n"                                                            \
+                "lds  r1,                    osc+2*%[mul]+%[pha]+1  \n"                                                            \
+                "adc  r1,                    r18                    \n"                                                            \
+                "sts  osc+2*%[mul]+%[pha]+1, r1                     \n"                                                            \
                 \
-                "mov  r27,                   r1                   " "\n\t" \
-                "sbrc r27,                   7                    " "\n\t" \
-                "com  r27                                         " "\n\t" \
-                "lsl  r27                                         " "\n\t" \
-                "lds  r26,                   osc+2*%[mul]+%[vol]  " "\n\t" \
-                "subi r27,                   128                  " "\n\t" \
-                "muls r27,                   r26                  " "\n\t" \
-                "lsl  r1                                          " "\n\t" \
-                "mov  r26,                   r1                   " "\n\t" \
+                "mov  r27,                   r1                     \n" /* int8_t phase2 = osc[2].phase >> 8;                   */ \
+                "sbrc r27,                   7                      \n" /* if (phase2 < 0) phase2 = ~phase2;                    */ \
+                "com  r27                                           \n"                                                            \
+                "lsl  r27                                           \n" /* phase2 <<= 1;                                        */ \
+                "lds  r26,                   osc+2*%[mul]+%[vol]    \n" /* int8_t vol2 = osc[2].vol;                            */ \
+                "subi r27,                   128                    \n" /* phase2 -= 128;                                       */ \
+                "muls r27,                   r26                    \n"                                                            \
+                "lsl  r1                                            \n"                                                            \
+                "mov  r26,                   r1                     \n" /* int8_t vol = ((phase2 * vol2) << 1) >> 8;            */ \
                 \
-                "lds  r18,                   osc+0*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+0*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+0*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+0*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+0*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+0*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r18,                   osc+0*%[mul]+%[fre]    \n" /* osc[0].phase += osc[0].freq; // update pulse phase   */ \
+                "lds  r0,                    osc+0*%[mul]+%[pha]    \n"                                                            \
+                "add  r0,                    r18                    \n"                                                            \
+                "sts  osc+0*%[mul]+%[pha],   r0                     \n"                                                            \
+                "lds  r1,                    osc+0*%[mul]+%[fre]+1  \n"                                                            \
+                "lds  r18,                   osc+0*%[mul]+%[pha]+1  \n"                                                            \
+                "adc  r18,                   r1                     \n"                                                            \
+                "sts  osc+0*%[mul]+%[pha]+1, r18                    \n"                                                            \
                 \
-                "mov  r18,                   r1                   " "\n\t" \
-                "lsl  r18                                         " "\n\t" \
-                "and  r18,                   r1                   " "\n\t" \
-                "lds  r27,                   osc+0*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r18,                   7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
                 \
-                "lds  r18,                   osc+1*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+1*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+1*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+1*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+1*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+1*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r27,                   osc+0*%[mul]+%[vol]    \n" /* int8_t vol0 = osc[0].vol;                            */ \
+                "cpi  r18,                   192                    \n" /* if ((osc[0].phase >= 0xC000) vol0 = -vol0;           */ \
+                "brcs 2f                                            \n"                                                            \
+                "neg  r27                                           \n"                                                            \
+                "2:                                                 \n"                                                            \
+                "add  r26,                   r27                    \n" /* vol += vol0;                                         */ \
                 \
-                "lds  r27,                   osc+1*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
+                "lds  r18,                   osc+1*%[mul]+%[fre]    \n" /* osc[1].phase += osc[1].freq; // update square phase  */ \
+                "lds  r0,                    osc+1*%[mul]+%[pha]    \n"                                                            \
+                "add  r0,                    r18                    \n"                                                            \
+                "sts  osc+1*%[mul]+%[pha],   r0                     \n"                                                            \
+                "lds  r18,                   osc+1*%[mul]+%[fre]+1  \n"                                                            \
+                "lds  r1,                    osc+1*%[mul]+%[pha]+1  \n"                                                            \
+                "adc  r1,                    r18                    \n"                                                            \
+                "sts  osc+1*%[mul]+%[pha]+1, r1                     \n"                                                            \
                 \
-                "ldi  r27,                   1                    " "\n\t" \
-                "lds  r0,                    osc+3*%[mul]+%[fre]  " "\n\t" \
-                "lds  r1,                    osc+3*%[mul]+%[fre]+1" "\n\t" \
-                "add  r0,                    r0                   " "\n\t" \
-                "adc  r1,                    r1                   " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "eor  r0,                    r27                  " "\n\t" \
-                "sbrc r1,                    6                    " "\n\t" \
-                "eor  r0,                    r27                  " "\n\t" \
-                "sts  osc+3*%[mul]+%[fre],   r0                   " "\n\t" \
-                "sts  osc+3*%[mul]+%[fre]+1, r1                   " "\n\t" \
+                "lds  r27,                   osc+1*%[mul]+%[vol]    \n" /* int8_t vol1 = osc[1].vol;                            */ \
+                "sbrc r1,                    7                      \n" /* if (osc[1].phase & 0x8000) vol1 = -vol1;             */ \
+                "neg  r27                                           \n"                                                            \
+                "add  r26,                   r27                    \n" /* vol += vol1;                                         */ \
                 \
-                "lds  r27,                   osc+3*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
+                "ldi  r27,                   1                      \n"                                                            \
+                "lds  r0,                    osc+3*%[mul]+%[fre]    \n" /* uint16_t freq = osc[3].freq; //noise frequency       */ \
+                "lds  r1,                    osc+3*%[mul]+%[fre]+1  \n"                                                            \
+                "add  r0,                    r0                     \n" /* freq <<= 1;                                          */ \
+                "adc  r1,                    r1                     \n"                                                            \
+                "sbrc r1,                    7                      \n" /* if (freq & 0x8000) freq ^= 1;                        */ \
+                "eor  r0,                    r27                    \n"                                                            \
+                "sbrc r1,                    6                      \n" /* if (freq & 0x4000) freq ^= 1;                        */ \
+                "eor  r0,                    r27                    \n"                                                            \
+                "sts  osc+3*%[mul]+%[fre],   r0                     \n" /* osc[3].freq = freq;                                  */ \
+                "sts  osc+3*%[mul]+%[fre]+1, r1                     \n"                                                            \
                 \
-                "lds  r27,                   pcm                  " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
-                "sts  %[reg],                r26                  " "\n\t" \
+                "lds  r27,                   osc+3*%[mul]+%[vol]    \n" /* int8_t vol3 = osc[3].vol;                            */ \
+                "sbrc r1,                    7                      \n" /* if (freq & 0xc8000) vol3 = -vol3;                    */ \
+                "neg  r27                                           \n"                                                            \
+                "add  r26,                   r27                    \n" /* vol += vol3;                                         */ \
                 \
-                "lds  r27,                   cia_count+1          " "\n\t" \
-                "lds  r26,                   cia_count            " "\n\t" \
-                "sbiw r26,                   1                    " "\n\t" \
-                "breq call_playroutine                            " "\n\t" \
-                "sts  cia_count+1,           r27                  " "\n\t" \
-                "sts  cia_count,             r26                  " "\n\t" \
-                "rjmp 2f                                          " "\n\t" \
+                "lds  r27,                   pcm                    \n" /* reg = vol + pcm;                                     */ \
+                "add  r26,                   r27                    \n"                                                            \
+                "sts  %[reg],                r26                    \n"                                                            \
                 \
-                "call_playroutine:                                " "\n\t" \
+                "lds  r27,                   cia_count+1            \n" /* if (--cia_count) return;                             */ \
+                "lds  r26,                   cia_count              \n"                                                            \
+                "sbiw r26,                   1                      \n"                                                            \
+                "breq call_playroutine                              \n"                                                            \
+                "sts  cia_count+1,           r27                    \n"                                                            \
+                "sts  cia_count,             r26                    \n"                                                            \
+                "rjmp 3f                                            \n"                                                            \
                 \
-                "lds  r27, cia+1                                  " "\n\t" \
-                "lds  r26, cia                                    " "\n\t" \
-                "sts  cia_count+1,           r27                  " "\n\t" \
-                "sts  cia_count,             r26                  " "\n\t" \
+                "call_playroutine:                                  \n"                                                            \
                 \
-                "sei                                              " "\n\t" \
-                "push r19                                         " "\n\t" \
-                "push r20                                         " "\n\t" \
-                "push r21                                         " "\n\t" \
-                "push r22                                         " "\n\t" \
-                "push r23                                         " "\n\t" \
-                "push r24                                         " "\n\t" \
-                "push r25                                         " "\n\t" \
-                "push r30                                         " "\n\t" \
-                "push r31                                         " "\n\t" \
+                "lds  r27, cia+1                                    \n" /* cia_count = cia;                                     */ \
+                "lds  r26, cia                                      \n"                                                            \
+                "sts  cia_count+1,           r27                    \n"                                                            \
+                "sts  cia_count,             r26                    \n"                                                            \
                 \
-                "clr  r1                                          " "\n\t" \
-                "call ATM_playroutine                             " "\n\t" \
+                "sei                                                \n" /* sei();                                               */ \
+                "push r19                                           \n"                                                            \
+                "push r20                                           \n"                                                            \
+                "push r21                                           \n"                                                            \
+                "push r22                                           \n"                                                            \
+                "push r23                                           \n"                                                            \
+                "push r24                                           \n"                                                            \
+                "push r25                                           \n"                                                            \
+                "push r30                                           \n"                                                            \
+                "push r31                                           \n"                                                            \
                 \
-                "pop  r31                                         " "\n\t" \
-                "pop  r30                                         " "\n\t" \
-                "pop  r25                                         " "\n\t" \
-                "pop  r24                                         " "\n\t" \
-                "pop  r23                                         " "\n\t" \
-                "pop  r22                                         " "\n\t" \
-                "pop  r21                                         " "\n\t" \
-                "pop  r20                                         " "\n\t" \
-                "pop  r19                                         " "\n\t" \
-                "2:                                               " "\n\t" \
-                "pop  r1                                          " "\n\t" \
-                "pop  r0                                          " "\n\t" \
-                "pop  r26                                         " "\n\t" \
-                "pop  r27                                         " "\n\t" \
-                "3:                                               " "\n\t" \
-                "pop  r18                                         " "\n\t" \
-                "out  __SREG__,              r2                   " "\n\t" \
-                "pop  r2                                          " "\n\t" \
-                "reti                                             " "\n\t" \
+                "clr  r1                                            \n"                                                            \
+                "call ATM_playroutine                               \n" /* ATM_playroutine();                                   */ \
+                \
+                "pop  r31                                           \n" /* }                                                    */ \
+                "pop  r30                                           \n"                                                            \
+                "pop  r25                                           \n"                                                            \
+                "pop  r24                                           \n"                                                            \
+                "pop  r23                                           \n"                                                            \
+                "pop  r22                                           \n"                                                            \
+                "pop  r21                                           \n"                                                            \
+                "pop  r20                                           \n"                                                            \
+                "pop  r19                                           \n"                                                            \
+                "3:                                                 \n"                                                            \
+                "pop  r1                                            \n"                                                            \
+                "pop  r0                                            \n"                                                            \
+                "pop  r26                                           \n"                                                            \
+                "pop  r27                                           \n"                                                            \
+                "4:                                                 \n"                                                            \
+                "pop  r18                                           \n"                                                            \
+                "out  __SREG__,              r2                     \n"                                                            \
+                "pop  r2                                            \n"                                                            \
+                "reti                                               \n"                                                            \
                 : \
                 : [reg]  "M" _SFR_MEM_ADDR(TARGET_REGISTER), \
                   [mul]  "M" (sizeof(Oscillator)), \
@@ -206,140 +206,140 @@ ISR(TIMER4_OVF_vect, ISR_NAKED) { \
 uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count; \
 ISR(TIMER4_OVF_vect, ISR_NAKED) { \
   asm volatile( \
-                "push r2                                          " "\n\t" \
-                "in   r2,                    __SREG__             " "\n\t" \
-                "push r18                                         " "\n\t" \
-                "lds  r18,                   half                 " "\n\t" \
-                "com  r18                                         " "\n\t" \
-                "sts  half,                  r18                  " "\n\t" \
-                "breq 1f                                          " "\n\t" \
-                "rjmp 3f                                          " "\n\t" \
-                "1:                                               " "\n\t" \
-                "push r27                                         " "\n\t" \
-                "push r26                                         " "\n\t" \
-                "push r0                                          " "\n\t" \
-                "push r1                                          " "\n\t" \
+                "push r2                                            \n" \
+                "in   r2,                    __SREG__               \n" \
+                "push r18                                           \n" \
+                "lds  r18,                   half                   \n" \
+                "com  r18                                           \n" \
+                "sts  half,                  r18                    \n" \
+                "breq 1f                                            \n" \
+                "rjmp 3f                                            \n" \
+                "1:                                                 \n" \
+                "push r27                                           \n" \
+                "push r26                                           \n" \
+                "push r0                                            \n" \
+                "push r1                                            \n" \
                 \
-                "lds  r18,                   osc+2*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+2*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+2*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+2*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+2*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+2*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r18,                   osc+2*%[mul]+%[fre]    \n" \
+                "lds  r0,                    osc+2*%[mul]+%[pha]    \n" \
+                "add  r0,                    r18                    \n" \
+                "sts  osc+2*%[mul]+%[pha],   r0                     \n" \
+                "lds  r18,                   osc+2*%[mul]+%[fre]+1  \n" \
+                "lds  r1,                    osc+2*%[mul]+%[pha]+1  \n" \
+                "adc  r1,                    r18                    \n" \
+                "sts  osc+2*%[mul]+%[pha]+1, r1                     \n" \
                 \
-                "mov  r27,                   r1                   " "\n\t" \
-                "sbrc r27,                   7                    " "\n\t" \
-                "com  r27                                         " "\n\t" \
-                "lsl  r27                                         " "\n\t" \
-                "lds  r26,                   osc+2*%[mul]+%[vol]  " "\n\t" \
-                "subi r27,                   128                  " "\n\t" \
-                "muls r27,                   r26                  " "\n\t" \
-                "lsl  r1                                          " "\n\t" \
-                "mov  r26,                   r1                   " "\n\t" \
+                "mov  r27,                   r1                     \n" \
+                "sbrc r27,                   7                      \n" \
+                "com  r27                                           \n" \
+                "lsl  r27                                           \n" \
+                "lds  r26,                   osc+2*%[mul]+%[vol]    \n" \
+                "subi r27,                   128                    \n" \
+                "muls r27,                   r26                    \n" \
+                "lsl  r1                                            \n" \
+                "mov  r26,                   r1                     \n" \
                 \
-                "lds  r18,                   osc+0*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+0*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+0*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+0*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+0*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+0*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r18,                   osc+0*%[mul]+%[fre]    \n" \
+                "lds  r0,                    osc+0*%[mul]+%[pha]    \n" \
+                "add  r0,                    r18                    \n" \
+                "sts  osc+0*%[mul]+%[pha],   r0                     \n" \
+                "lds  r18,                   osc+0*%[mul]+%[fre]+1  \n" \
+                "lds  r1,                    osc+0*%[mul]+%[pha]+1  \n" \
+                "adc  r1,                    r18                    \n" \
+                "sts  osc+0*%[mul]+%[pha]+1, r1                     \n" \
                 \
-                "mov  r18,                   r1                   " "\n\t" \
-                "lsl  r18                                         " "\n\t" \
-                "and  r18,                   r1                   " "\n\t" \
-                "lds  r27,                   osc+0*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r18,                   7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
+                "mov  r18,                   r1                     \n" \
+                "lsl  r18                                           \n" \
+                "and  r18,                   r1                     \n" \
+                "lds  r27,                   osc+0*%[mul]+%[vol]    \n" \
+                "sbrc r18,                   7                      \n" \
+                "neg  r27                                           \n" \
+                "add  r26,                   r27                    \n" \
                 \
-                "lds  r18,                   osc+1*%[mul]+%[fre]  " "\n\t" \
-                "lds  r0,                    osc+1*%[mul]+%[pha]  " "\n\t" \
-                "add  r0,                    r18                  " "\n\t" \
-                "sts  osc+1*%[mul]+%[pha],   r0                   " "\n\t" \
-                "lds  r18,                   osc+1*%[mul]+%[fre]+1" "\n\t" \
-                "lds  r1,                    osc+1*%[mul]+%[pha]+1" "\n\t" \
-                "adc  r1,                    r18                  " "\n\t" \
-                "sts  osc+1*%[mul]+%[pha]+1, r1                   " "\n\t" \
+                "lds  r18,                   osc+1*%[mul]+%[fre]    \n" \
+                "lds  r0,                    osc+1*%[mul]+%[pha]    \n" \
+                "add  r0,                    r18                    \n" \
+                "sts  osc+1*%[mul]+%[pha],   r0                     \n" \
+                "lds  r18,                   osc+1*%[mul]+%[fre]+1  \n" \
+                "lds  r1,                    osc+1*%[mul]+%[pha]+1  \n" \
+                "adc  r1,                    r18                    \n" \
+                "sts  osc+1*%[mul]+%[pha]+1, r1                     \n" \
                 \
-                "lds  r27,                   osc+1*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
+                "lds  r27,                   osc+1*%[mul]+%[vol]    \n" \
+                "sbrc r1,                    7                      \n" \
+                "neg  r27                                           \n" \
+                "add  r26,                   r27                    \n" \
                 \
-                "ldi  r27,                   1                    " "\n\t" \
-                "lds  r0,                    osc+3*%[mul]+%[fre]  " "\n\t" \
-                "lds  r1,                    osc+3*%[mul]+%[fre]+1" "\n\t" \
-                "add  r0,                    r0                   " "\n\t" \
-                "adc  r1,                    r1                   " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "eor  r0,                    r27                  " "\n\t" \
-                "sbrc r1,                    6                    " "\n\t" \
-                "eor  r0,                    r27                  " "\n\t" \
-                "sts  osc+3*%[mul]+%[fre],   r0                   " "\n\t" \
-                "sts  osc+3*%[mul]+%[fre]+1, r1                   " "\n\t" \
+                "ldi  r27,                   1                      \n" \
+                "lds  r0,                    osc+3*%[mul]+%[fre]    \n" \
+                "lds  r1,                    osc+3*%[mul]+%[fre]+1  \n" \
+                "add  r0,                    r0                     \n" \
+                "adc  r1,                    r1                     \n" \
+                "sbrc r1,                    7                      \n" \
+                "eor  r0,                    r27                    \n" \
+                "sbrc r1,                    6                      \n" \
+                "eor  r0,                    r27                    \n" \
+                "sts  osc+3*%[mul]+%[fre],   r0                     \n" \
+                "sts  osc+3*%[mul]+%[fre]+1, r1                     \n" \
                 \
-                "lds  r27,                   osc+3*%[mul]+%[vol]  " "\n\t" \
-                "sbrc r1,                    7                    " "\n\t" \
-                "neg  r27                                         " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
+                "lds  r27,                   osc+3*%[mul]+%[vol]    \n" \
+                "sbrc r1,                    7                      \n" \
+                "neg  r27                                           \n" \
+                "add  r26,                   r27                    \n" \
                 \
-                "lds  r27,                   pcm                  " "\n\t" \
-                "add  r26,                   r27                  " "\n\t" \
-                "sts  %[reg],                r26                  " "\n\t" \
-                "sts  %[reg2],               r26                  " "\n\t" \
+                "lds  r27,                   pcm                    \n" \
+                "add  r26,                   r27                    \n" \
+                "sts  %[reg],                r26                    \n" \
+                "sts  %[reg2],               r26                    \n" \
                 \
-                "lds  r27,                   cia_count+1          " "\n\t" \
-                "lds  r26,                   cia_count            " "\n\t" \
-                "sbiw r26,                   1                    " "\n\t" \
-                "breq call_playroutine                            " "\n\t" \
-                "sts  cia_count+1,           r27                  " "\n\t" \
-                "sts  cia_count,             r26                  " "\n\t" \
-                "rjmp 2f                                          " "\n\t" \
+                "lds  r27,                   cia_count+1            \n" \
+                "lds  r26,                   cia_count              \n" \
+                "sbiw r26,                   1                      \n" \
+                "breq call_playroutine                              \n" \
+                "sts  cia_count+1,           r27                    \n" \
+                "sts  cia_count,             r26                    \n" \
+                "rjmp 2f                                            \n" \
                 \
-                "call_playroutine:                                " "\n\t" \
+                "call_playroutine:                                  \n" \
                 \
-                "lds  r27, cia+1                                  " "\n\t" \
-                "lds  r26, cia                                    " "\n\t" \
-                "sts  cia_count+1,           r27                  " "\n\t" \
-                "sts  cia_count,             r26                  " "\n\t" \
+                "lds  r27, cia+1                                    \n" \
+                "lds  r26, cia                                      \n" \
+                "sts  cia_count+1,           r27                    \n" \
+                "sts  cia_count,             r26                    \n" \
                 \
-                "sei                                              " "\n\t" \
-                "push r19                                         " "\n\t" \
-                "push r20                                         " "\n\t" \
-                "push r21                                         " "\n\t" \
-                "push r22                                         " "\n\t" \
-                "push r23                                         " "\n\t" \
-                "push r24                                         " "\n\t" \
-                "push r25                                         " "\n\t" \
-                "push r30                                         " "\n\t" \
-                "push r31                                         " "\n\t" \
+                "sei                                                \n" \
+                "push r19                                           \n" \
+                "push r20                                           \n" \
+                "push r21                                           \n" \
+                "push r22                                           \n" \
+                "push r23                                           \n" \
+                "push r24                                           \n" \
+                "push r25                                           \n" \
+                "push r30                                           \n" \
+                "push r31                                           \n" \
                 \
-                "clr  r1                                          " "\n\t" \
-                "call ATM_playroutine                             " "\n\t" \
+                "clr  r1                                            \n" \
+                "call ATM_playroutine                               \n" \
                 \
-                "pop  r31                                         " "\n\t" \
-                "pop  r30                                         " "\n\t" \
-                "pop  r25                                         " "\n\t" \
-                "pop  r24                                         " "\n\t" \
-                "pop  r23                                         " "\n\t" \
-                "pop  r22                                         " "\n\t" \
-                "pop  r21                                         " "\n\t" \
-                "pop  r20                                         " "\n\t" \
-                "pop  r19                                         " "\n\t" \
-                "2:                                               " "\n\t" \
-                "pop  r1                                          " "\n\t" \
-                "pop  r0                                          " "\n\t" \
-                "pop  r26                                         " "\n\t" \
-                "pop  r27                                         " "\n\t" \
-                "3:                                               " "\n\t" \
-                "pop  r18                                         " "\n\t" \
-                "out  __SREG__,              r2                   " "\n\t" \
-                "pop  r2                                          " "\n\t" \
-                "reti                                             " "\n\t" \
+                "pop  r31                                           \n" \
+                "pop  r30                                           \n" \
+                "pop  r25                                           \n" \
+                "pop  r24                                           \n" \
+                "pop  r23                                           \n" \
+                "pop  r22                                           \n" \
+                "pop  r21                                           \n" \
+                "pop  r20                                           \n" \
+                "pop  r19                                           \n" \
+                "2:                                                 \n" \
+                "pop  r1                                            \n" \
+                "pop  r0                                            \n" \
+                "pop  r26                                           \n" \
+                "pop  r27                                           \n" \
+                "3:                                                 \n" \
+                "pop  r18                                           \n" \
+                "out  __SREG__,              r2                     \n" \
+                "pop  r2                                            \n" \
+                "reti                                               \n" \
                 : \
                 : [reg]  "M" _SFR_MEM_ADDR(TARGET_REGISTER), \
                   [reg2] "M" _SFR_MEM_ADDR(TARGET_REGISTER2), \
