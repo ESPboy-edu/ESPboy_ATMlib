@@ -57,18 +57,18 @@ extern void ATM_playroutine() asm("ATM_playroutine");
 
 #ifndef AB_ALTERNATE_WIRING
 #define ATMLIB_CONSTRUCT_ISR(TARGET_REGISTER) \
-uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count; \
+uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count;    /* uint16_t cia, cia_count;                             */
 ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(TIMER4_OVF_vect) {                               */ \
   asm volatile( \
-                "push r2                                            \n"                                                            \
-                "in   r2,                    __SREG__               \n"                                                            \
                 "push r18                                           \n"                                                            \
-                "lds  r18,                   half                   \n" /* half = ~half;                                        */ \
+                "lds  r18,                   half                   \n" /* half = !half;                                        */ \
                 "com  r18                                           \n"                                                            \
                 "sts  half,                  r18                    \n"                                                            \
                 "breq 1f                                            \n" /* if (half) return;                                    */ \
                 "rjmp 4f                                            \n"                                                            \
                 "1:                                                 \n"                                                            \
+                "push r2                                            \n"                                                            \
+                "in   r2,                    __SREG__               \n"                                                            \
                 "push r27                                           \n"                                                            \
                 "push r26                                           \n"                                                            \
                 "push r0                                            \n"                                                            \
@@ -84,7 +84,7 @@ ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(T
                 "sts  osc+2*%[mul]+%[pha]+1, r1                     \n"                                                            \
                 \
                 "mov  r27,                   r1                     \n" /* int8_t phase2 = osc[2].phase >> 8;                   */ \
-                "sbrc r27,                   7                      \n" /* if (phase2 < 0) phase2 = ~phase2;                    */ \
+                "sbrc r27,                   7                      \n" /* if (phase2 < 0) phase2 = !phase2;                    */ \
                 "com  r27                                           \n"                                                            \
                 "lsl  r27                                           \n" /* phase2 <<= 1;                                        */ \
                 "lds  r26,                   osc+2*%[mul]+%[vol]    \n" /* int8_t vol2 = osc[2].vol;                            */ \
@@ -104,7 +104,7 @@ ISR(TIMER4_OVF_vect, ISR_NAKED) {                                       /* ISR(T
                 \
                 \
                 "lds  r27,                   osc+0*%[mul]+%[vol]    \n" /* int8_t vol0 = osc[0].vol;                            */ \
-                "cpi  r18,                   192                    \n" /* if ((osc[0].phase >= 0xC000) vol0 = -vol0;           */ \
+                "cpi  r18,                   192                    \n" /* if (uint8_t(osc[0].phase >> 8) >= 192) vol0 = -vol0; */ \
                 "brcs 2f                                            \n"                                                            \
                 "neg  r27                                           \n"                                                            \
                 "2:                                                 \n"                                                            \
