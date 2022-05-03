@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <inttypes.h>
 #include <Arduino.h>
+#include <sigma_delta.h>
 
 #define CH_ZERO             0
 #define CH_ONE              1
@@ -14,7 +15,7 @@ extern const word *trackList;
 extern const byte *trackBase;
 extern uint8_t pcm;
 
-extern bool half;
+//extern bool half;
 
 class ATMsynth {
 

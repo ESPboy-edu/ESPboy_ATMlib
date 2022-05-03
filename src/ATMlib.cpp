@@ -1,158 +1,15 @@
 #include "ATMlib.h"
+#define SAMPLE_RATE 62500
+#define SOUNDPIN D3
 
-uint16_t __attribute__((used)) cia, __attribute__((used)) cia_count;
-#ifdef __AVR_ARCH__
-ISR(TIMER4_OVF_vect, ISR_NAKED) {
-  asm volatile(
-    "push r18                                           \n"
-    "lds  r18,                   half                   \n" // half = !half;
-    "sbrc r18,                   0                      \n" // if (half) return;
-    "rjmp 2f                                            \n"
-    "ldi  r18,                   0xFF                   \n"
-    "1:                                                 \n"
-    "sts  half,                  r18                    \n"
-    "pop  r18                                           \n"
-    "reti                                               \n"
-    "2:                                                 \n"
-    "push r0                                            \n"
-    "push r1                                            \n"
-    "push r2                                            \n"
-    "in   r2,                    __SREG__               \n"
-    "push r30                                           \n"
-    "push r31                                           \n"
-    "ldi  r30,                   lo8(osc)               \n"
-    "ldi  r31,                   hi8(osc)               \n"
+uint16_t cia, cia_count;
+//bool half;
+bool sigmadeltaflag=0;
 
-    "ldi  r18,                   1                      \n"
-    "ldd  r0,                    Z+3*%[mul]+%[fre]      \n" // uint16_t freq = osc[3].freq; //noise frequency
-    "ldd  r1,                    Z+3*%[mul]+%[fre]+1    \n"
-    "add  r0,                    r0                     \n" // freq <<= 1;
-    "adc  r1,                    r1                     \n"
-    "sbrc r1,                    7                      \n" // if (freq & 0x8000) freq ^= 1;
-    "eor  r0,                    r18                    \n"
-    "sbrc r1,                    6                      \n" // if (freq & 0x4000) freq ^= 1;
-    "eor  r0,                    r18                    \n"
-    "std  Z+3*%[mul]+%[fre],     r0                     \n" // osc[3].freq = freq;
-    "std  Z+3*%[mul]+%[fre]+1,   r1                     \n"
-
-    "ldd  r18,                   Z+3*%[mul]+%[vol]      \n" // int8_t vol = osc[3].vol;
-    "sbrc r1,                    7                      \n" // if (freq & 0x8000) vol = -vol;
-    "neg  r18                                           \n"
-    "mov  r1,                    r18                    \n"
-
-    "ldd  r0,                    Z+0*%[mul]+%[fre]      \n" // osc[0].phase += osc[0].freq; // update pulse phase
-    "ldd  r18,                   Z+0*%[mul]+%[pha]      \n"
-    "add  r18,                   r0                     \n"
-    "std  Z+0*%[mul]+%[pha],     r18                    \n"
-    "ldd  r0,                    Z+0*%[mul]+%[fre]+1    \n"
-    "ldd  r18,                   Z+0*%[mul]+%[pha]+1    \n"
-    "adc  r18,                   r0                     \n"
-    "std  Z+0*%[mul]+%[pha]+1,   r18                    \n"
-
-    "ldd  r0,                    Z+0*%[mul]+%[vol]      \n" // int8_t vol0 = osc[0].vol;
-    "cpi  r18,                   192                    \n" // if (uint8_t(osc[0].phase >> 8) >= 192) vol0 = -vol0;
-    "brcs 3f                                            \n"
-    "neg  r0                                            \n"
-    "add  r1,                    r0                     \n" // int8_t vol += vol0;
-    "3:                                                 \n"
-
-    "ldd  r18,                   Z+1*%[mul]+%[fre]      \n" // osc[1].phase += osc[1].freq; // update square phase
-    "ldd  r0,                    Z+1*%[mul]+%[pha]      \n"
-    "add  r0,                    r18                    \n"
-    "std  Z+1*%[mul]+%[pha],     r0                     \n"
-    "ldd  r18,                   Z+1*%[mul]+%[fre]+1    \n"
-    "ldd  r0,                    Z+1*%[mul]+%[pha]+1    \n"
-    "adc  r0,                    r18                    \n"
-    "std  Z+1*%[mul]+%[pha]+1,   r0                     \n"
-
-    "ldd  r18,                   Z+1*%[mul]+%[vol]      \n" // int8_t vol1 = osc[1].vol;
-    "sbrc r0,                    7                      \n" // if (osc[1].phase & 0x8000) vol1 = -vol1;
-    "neg  r18                                           \n"
-    "add  r1,                    r18                    \n" // vol += vol1;
-
-    "ldd  r18,                   Z+2*%[mul]+%[fre]      \n" // osc[2].phase += osc[2].freq;// update triangle phase
-    "ldd  r0,                    Z+2*%[mul]+%[pha]      \n"
-    "add  r0,                    r18                    \n"
-    "std  Z+2*%[mul]+%[pha],     r0                     \n"
-    "ldd  r0,                    Z+2*%[mul]+%[fre]+1    \n"
-    "ldd  r18,                   Z+2*%[mul]+%[pha]+1    \n"
-    "adc  r18,                   r0                     \n"
-    "std  Z+2*%[mul]+%[pha]+1,   r18                    \n"
-                                                            // int8_t phase2 = osc[2].phase >> 8;
-    "ldd  r30,                   Z+2*%[mul]+%[vol]      \n" // int8_t vol2 = osc[2].vol;
-    "lds  r31,                   pcm                    \n" // int8_t tmp = pcm + vol;
-    "add  r31,                   r1                     \n"
-    "sbrc r18,                   7                      \n" // if (phase2 < 0) phase2 = ~phase2;
-    "com  r18                                           \n"
-    "lsl  r18                                           \n" // phase2 <<= 1;
-    "subi r18,                   128                    \n" // phase2 -= 128;
-    "muls r18,                   r30                    \n" // vol = ((phase2 * vol2) << 1) >> 8 + tmp;
-    "lsl  r1                                            \n"
-    "add  r1,                    r31                    \n"
-
-    "sts  %[reg],                r1                     \n" // reg = vol;
-  #ifdef AB_ALTERNATE_WIRING
-    "sts  %[reg2],               r1                     \n" // reg2 = vol;
-  #endif
-    "lds  r31,                   cia_count+1            \n" // if (--cia_count) return;
-    "lds  r30,                   cia_count              \n"
-    "sbiw r30,                   1                      \n"
-    "brne 4f                                            \n"
-    "lds  r31, cia+1                                    \n" // cia_count = cia;
-    "lds  r30, cia                                      \n"
-    "4:                                                 \n"
-    "sts  cia_count+1,           r31                    \n"
-    "sts  cia_count,             r30                    \n"
-    "brne 5f                                            \n"
-
-    "sei                                                \n" // sei();
-    "push r19                                           \n"
-    "push r20                                           \n"
-    "push r21                                           \n"
-    "push r22                                           \n"
-    "push r23                                           \n"
-    "push r24                                           \n"
-    "push r25                                           \n"
-    "push r26                                           \n"
-    "push r27                                           \n"
-
-    "clr  r1                                            \n"
-    "call ATM_playroutine                               \n" // ATM_playroutine();
-
-    "pop  r27                                           \n" // }
-    "pop  r26                                           \n"
-    "pop  r25                                           \n"
-    "pop  r24                                           \n"
-    "pop  r23                                           \n"
-    "pop  r22                                           \n"
-    "pop  r21                                           \n"
-    "pop  r20                                           \n"
-    "pop  r19                                           \n"
-    "5:                                                 \n"
-    "pop  r31                                           \n"
-    "pop  r30                                           \n"
-    "out  __SREG__,              r2                     \n"
-    "pop  r2                                            \n"
-    "pop  r1                                            \n"
-    "pop  r0                                            \n"
-    "ldi  r18,                   0x00                   \n"
-    "rjmp 1b                                            \n"
-    :
-    : [reg]  "M" _SFR_MEM_ADDR(OCR4A),
-  #ifdef AB_ALTERNATE_WIRING
-    [reg2]  "M" _SFR_MEM_ADDR(OCR4D),
-  #endif
-    [mul]  "M" (sizeof(Oscillator)),
-    [pha]  "M" (offsetof(Oscillator, phase)),
-    [fre]  "M" (offsetof(Oscillator, freq)),
-    [vol]  "M" (offsetof(Oscillator, vol))
-  );
-}
-#else
-ISR(TIMER4_OVF_vect)
+void IRAM_ATTR sound_speaker_ISR()
 {
-  half = !half;
-  if (half) return;
+  //half = !half;
+  //if (half) return;
 
   osc[2].phase += osc[2].freq;       // update triangle phase
   int8_t phase2 = osc[2].phase >> 8;
@@ -180,21 +37,21 @@ ISR(TIMER4_OVF_vect)
   if (freq & 0x8000) vol3 = -vol3;
   vol += vol3;
 
-  OCR4A = vol + pcm;
+  //OCR4A = vol + pcm;
+  sigmaDeltaWrite(0, vol + pcm);
   if (--cia_count) return;
 
   cia_count = cia;
   sei();
   ATM_playroutine();
 }
-#endif
+
 
 byte trackCount;
 byte tickRate;
 const word *trackList;
 const byte *trackBase;
-uint8_t pcm __attribute__((used)) = 128;
-bool half __attribute__((used));
+uint8_t pcm = 128;
 
 byte ChannelActiveMute = 0b11110000;
 //                         ||||||||
@@ -207,11 +64,11 @@ byte ChannelActiveMute = 0b11110000;
 //                         |└------->  6  channel 2 is Active (0 = false / 1 = true)
 //                         └-------->  7  channel 3 is Active (0 = false / 1 = true)
 
-//Imports
-extern uint16_t cia;
+////Imports
+//extern uint16_t cia;
 
 // Exports
-osc_t __attribute__((used)) osc[4];
+osc_t osc[4];
 
 
 const word noteTable[64] PROGMEM = {
@@ -304,14 +161,15 @@ void ATMsynth::play(const byte *song) {
   osc[3].freq = 0x0001; // Seed LFSR
   channel[3].freq = 0x0001; // xFX
 
-  TCCR4A = 0b01000010;    // Fast-PWM 8-bit
-  TCCR4B = 0b00000001;    // 62500Hz
-  OCR4C  = 0xFF;          // Resolution to 8-bit (TOP=0xFF)
-  OCR4A  = 0x80;
-#ifdef AB_ALTERNATE_WIRING
-  TCCR4C = 0b01000101;
-  OCR4D  = 0x80;
-#endif
+ 
+//  TCCR4A = 0b01000010;    // Fast-PWM 8-bit
+//  TCCR4B = 0b00000001;    // 62500Hz
+//  OCR4C  = 0xFF;          // Resolution to 8-bit (TOP=0xFF)
+//  OCR4A  = 0x80;
+//#ifdef AB_ALTERNATE_WIRING
+//  TCCR4C = 0b01000101;
+//  OCR4D  = 0x80;
+//#endif
 
   // Load a melody stream and start grinding samples
   // Read track count
@@ -324,19 +182,48 @@ void ATMsynth::play(const byte *song) {
   for (byte n = 0; n < 4; n++) {
     channel[n].ptr = getTrackPointer(pgm_read_byte(song++));
   }
-  TIMSK4 = 0b00000100;// enable interrupt as last
+  
+  noInterrupts();
+  sigmaDeltaSetup(0, SAMPLE_RATE);
+  sigmaDeltaAttachPin(SOUNDPIN);
+  sigmaDeltaEnable();
+  sigmadeltaflag = true;
+  timer1_attachInterrupt(sound_speaker_ISR);
+  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
+  timer1_write(160000000 / SAMPLE_RATE * 2);
+  interrupts(); 
+ // TIMSK4 = 0b00000100;// enable interrupt as last
 }
 
 // Stop playing, unload melody
 void ATMsynth::stop() {
-  TIMSK4 = 0; // Disable interrupt
+  //TIMSK4 = 0; // Disable interrupt
+  noInterrupts();
+  timer1_disable();
+  sigmadeltaflag = false;
+  sigmaDeltaDisable();
+  interrupts();
   memset(channel, 0, sizeof(channel));
   ChannelActiveMute = 0b11110000;
 }
 
 // Start grinding samples or Pause playback
 void ATMsynth::playPause() {
-  TIMSK4 = TIMSK4 ^ 0b00000100; // toggle disable/enable interrupt
+  if(sigmadeltaflag == true){
+    noInterrupts();
+    timer1_disable();
+    sigmadeltaflag = false;
+    sigmaDeltaDisable();
+    interrupts();
+  }
+  else{
+    noInterrupts();
+    timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
+    sigmaDeltaEnable();
+    sigmadeltaflag = true;
+    interrupts();
+  }
+  //TIMSK4 = TIMSK4 ^ 0b00000100; // toggle disable/enable interrupt
 }
 
 // Toggle mute on/off on a channel, so it can be used for sound effects
@@ -350,7 +237,7 @@ void ATMsynth::unMuteChannel(byte ch) {
 }
 
 
-__attribute__((used))
+
 void ATM_playroutine() {
   ch_t *ch;
 
