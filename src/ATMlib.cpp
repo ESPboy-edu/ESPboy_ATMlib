@@ -4,7 +4,7 @@
 
 uint16_t cia, cia_count;
 //bool half;
-bool sigmadeltaflag=0;
+static bool sigmadeltaflag=0;
 
 void IRAM_ATTR sound_speaker_ISR()
 {
@@ -206,6 +206,11 @@ void ATMsynth::stop() {
   memset(channel, 0, sizeof(channel));
   ChannelActiveMute = 0b11110000;
 }
+
+bool ATMsynth::isPlay() {
+  return(sigmadeltaflag);
+};
+
 
 // Start grinding samples or Pause playback
 void ATMsynth::playPause() {

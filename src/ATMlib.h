@@ -30,10 +30,12 @@ class ATMsynth {
 
     // Stop playback (unloads song)
     static void stop();
-
+    
     static void muteChannel(byte ch);
 
     static void unMuteChannel(byte ch);
+    
+    static bool isPlay();
 };
 
 
