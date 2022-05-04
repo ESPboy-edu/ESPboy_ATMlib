@@ -103,7 +103,7 @@ struct ch_t {
   byte vol;
 
   // Volume & Frequency slide FX
-  char volFreSlide;
+  signed char volFreSlide;
   byte volFreConfig;
   byte volFreCount;
 
@@ -117,7 +117,7 @@ struct ch_t {
   byte reCount;        // also using this as a buffer for volume retrig on all channels
 
   // Transposition FX
-  char transConfig;
+  signed char transConfig;
 
   // Tremolo or Vibrato FX
   byte treviDepth;
@@ -125,7 +125,7 @@ struct ch_t {
   byte treviCount;
 
   // Glissando FX
-  char glisConfig;
+  signed char glisConfig;
   byte glisCount;
 
 };
