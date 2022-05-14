@@ -1,5 +1,5 @@
 #include "ATMlib.h"
-#define SAMPLE_RATE 62500
+#define SAMPLE_RATE 22000
 #define SOUNDPIN D3
 
 uint16_t cia, cia_count;
@@ -184,13 +184,13 @@ void ATMsynth::play(const byte *song) {
   }
   
   noInterrupts();
-  sigmaDeltaSetup(0, SAMPLE_RATE);
+  sigmaDeltaSetup(0, 65000);
   sigmaDeltaAttachPin(SOUNDPIN);
   sigmaDeltaEnable();
   sigmadeltaflag = true;
   timer1_attachInterrupt(sound_speaker_ISR);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
-  timer1_write(160000000 / SAMPLE_RATE * 2);
+  timer1_write(80000000 / SAMPLE_RATE);
   interrupts(); 
  // TIMSK4 = 0b00000100;// enable interrupt as last
 }
