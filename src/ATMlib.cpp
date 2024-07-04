@@ -1,5 +1,5 @@
 #include "ATMlib.h"
-#define SAMPLE_RATE 22000
+#define SAMPLE_RATE 18000
 #define SOUNDPIN D3
 
 uint16_t cia, cia_count;
