@@ -1,97 +1,2259 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>atm track editor</title>
-        <link rel="icon" type="image/png" href="/icon.png">
-        <link rel="stylesheet" href="css/style.css" />
-        <link rel="stylesheet" href="css/font-awesome.min.css" />
-    </head>
-    <body>
-        <div class="shadow">
-            <div class="white-background">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATMlib — TEAM a.r.g.</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="shortcut icon" href="favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-                <header>
-                    <div class="title">
-                        <img src="images/title.gif" height="64" width="700">
-                    </div>
-                    <!--div class="header-buttons">
-                        <a href="index.html">
-                            <img src="images/home.gif" height="28" width="88">
-                        </a>
-                        <a href="http://www.team-arg.org/news.html">
-                            <img src="images/news.gif" height="28" width="88">
-                        </a>
-                        <a href="http://www.team-arg.org/games.html">
-                            <img src="images/games.gif" height="28" width="108">
-                        </a>
-                        <a href="http://www.team-arg.org/demos.html">
-                            <img src="images/demos.gif" height="28" width="108">
-                        </a>
-                        <a href="http://www.team-arg.org/tools.html">
-                            <img src="images/tools.gif" height="28" width="108">
-                        </a>
-                        <a href="http://www.team-arg.org/more-about.html">
-                            <img src="images/more.gif" height="28" width="88">
-                        </a>
-                    </div-->
-                    <div class="banner">
-                        <img src="images/ATMtrackereditor.png"/>
-                        <div class="banner-buttons">
-                            <!--a href="/trackerEditor/">
-                                <img src="images/tool.gif"/>
-                            </a>
-                            <img src="images/line.gif"/-->
-                            <a href="atmedit-manual.html">
-                                <img src="images/manual.gif"/>
-                            </a>
-                        </div>
-                    </div>
-                    <img class="line" src="images/longLine.gif" height="5" width="700">
-                </header>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fefefd;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-                <div id="app"></div>
+        header {
+            background: #fefefd;
+            border-bottom: 3px solid #4a3b3a;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-                <footer>
-                    <div>
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-                        <div class="line">
-                            <img src="images/longLine.gif" height="5" width="700">
-                        </div>
+        .logo {
+            width: 200px;
+            height: auto;
+        }
 
-                        <div class="spread">
+        .logo img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-                            <div class="link-images">
-                                <a href="http://www.twitter.com/TEAMarg_org">
-                                    <img src="images/twitter.gif" height="48" width="48">
-                                </a>
-                                <a href="https://www.youtube.com/channel/UC5PtrkZ9BaCrLIW8WXe2_XA">
-                                    <img src="images/youtube.gif" height="48" width="48">
-                                </a>
-                                <a href="https://github.com/TEAMarg">
-                                    <img src="images/github.gif" height="48" width="48">
-                                </a>
-                                <a href="https://www.facebook.com/TEAMArduinoRetroGaming/">
-                                    <img src="images/facebook.gif" height="48" width="48">
-                                </a>
-                            </div>
+        nav {
+            background: #fefefd;
+            border-top: 2px solid #4a3b3a;
+            border-bottom: 2px solid #4a3b3a;
+        }
 
-                            <div>
-                                <img src="images/8bit-games.gif" height="48" width="96">
-                            </div>
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
 
-                        </div>
+        nav li {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+        }
 
-                    </div>
-                </footer>
+        nav a {
+            display: block;
+            padding: 12px 16px;
+            color: #4a3b3a;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border-right: 1px solid #ddd;
+            position: relative;
+        }
 
+        nav li:last-child a {
+            border-right: none;
+        }
+
+        nav a:hover {
+            background: #4a3b3a;
+            color: #fefefd;
+            transform: translateY(-2px);
+        }
+
+        nav a.active {
+            background: #4a3b3a;
+            color: #fefefd;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .content-section {
+            background: #fefefd;
+            border: 2px solid #4a3b3a;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-section h1 {
+            color: #4a3b3a;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .content-section h2 {
+            color: #4a3b3a;
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .content-section h3 {
+            color: #4a3b3a;
+            font-size: 17px;
+            margin-top: 22px;
+            margin-bottom: 10px;
+        }
+
+        .content-section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .content-section ul, .content-section ol {
+            margin: 0 0 16px 22px;
+            line-height: 1.8;
+        }
+
+        .content-section li {
+            margin-bottom: 4px;
+        }
+
+        .content-section a {
+            color: #4a3b3a;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .content-section a:hover {
+            color: #666;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .project-card {
+            background: #f5f5f3;
+            border: 2px solid #4a3b3a;
+            border-radius: 5px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(74, 59, 58, 0.2);
+        }
+
+        .project-card h3 {
+            color: #4a3b3a;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .project-card p {
+            color: #555;
+            margin-bottom: 0;
+        }
+
+        code, kbd {
+            font-family: Consolas, 'Courier New', monospace;
+            background: #f5f5f3;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.92em;
+        }
+
+        pre {
+            background: #f5f5f3;
+            border: 2px solid #4a3b3a;
+            border-radius: 5px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 12px 0 20px;
+            line-height: 1.5;
+            font-size: 13.5px;
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 22px;
+            font-size: 14.5px;
+        }
+
+        th, td {
+            border: 1px solid #4a3b3a;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #4a3b3a;
+            color: #fefefd;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) td {
+            background: #f5f5f3;
+        }
+
+        .note {
+            background: #f5f5f3;
+            border-left: 4px solid #4a3b3a;
+            padding: 12px 16px;
+            margin: 16px 0;
+        }
+
+        footer {
+            background: #fefefd;
+            border-top: 3px solid #4a3b3a;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #f5f5f3;
+            border: 2px solid #4a3b3a;
+            border-radius: 50%;
+            color: #4a3b3a;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #4a3b3a;
+            border-color: #4a3b3a;
+            color: #fefefd;
+            transform: translateY(-3px);
+        }
+
+        footer p {
+            color: #999;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            nav ul { flex-direction: column; }
+            nav a { border-right: none; border-bottom: 1px solid #ddd; }
+            nav li:last-child a { border-bottom: none; }
+            .logo { width: 150px; }
+            .content-section { padding: 25px; }
+            .content-section h1 { font-size: 24px; }
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+    
+        /* generated by readme_to_html.py */
+        .table-wrap { overflow-x: auto; }
+        .content-section blockquote, .content-section .note { background: #f5f5f3; border-left: 4px solid #4a3b3a; padding: 12px 16px; margin: 16px 0; }
+        .content-section .note p { margin-bottom: 0; }
+        .content-section h4 { color: #4a3b3a; margin: 18px 0 8px; }
+        .content-section hr { border: none; border-top: 2px solid #4a3b3a; margin: 24px 0; }
+        .content-section input[type=checkbox] { margin-right: 6px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="https://t-arg.github.io/"><img src="https://t-arg.github.io/images/TEAMarg.gif" alt="TEAM a.r.g."></a>
             </div>
         </div>
+    </header>
 
-        <script src="js/squawksynth.js"></script>
-        <script src="js/webaudio.js"></script>
-        <script src="js/converter.js"></script>
-        <script src="js/squawkstream.js"></script>
+    <nav>
+        <ul>
+            <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+            <li><a href="#" class="nav-link" data-page="api">API</a></li>
+            <li><a href="#" class="nav-link" data-page="config">Config</a></li>
+            <li><a href="#" class="nav-link" data-page="format">Format</a></li>
+            <li><a href="#" class="nav-link" data-page="playroutine">Playroutine</a></li>
+            <li><a href="#" class="nav-link" data-page="guide">Songwriting</a></li>
+            <li><a href="#" class="nav-link" data-page="catalog">Songs</a></li>
+            <li><a href="#" class="nav-link" data-page="tracker">Tracker</a></li>
+        </ul>
+    </nav>
 
-        <script type="text/javascript" src="js/app.js"></script>
-    </body>
+    <main>
+        <section id="home" class="content-section active">
+<h1>ATMlib</h1>
+<p><strong>ATMlib</strong> stands for <strong>Arduboy Tracker Music</strong>. It is a four-channel chiptune playroutine and song format for the <a href="https://arduboy.com">Arduboy</a>, based on <a href="https://github.com/stg/Squawk" title="Squawk Github Page"><em><strong>Squawk</strong></em></a>, a minimalistic 8-bit software synthesizer and playroutine library for Arduino created by Davey Taylor aka STG.</p>
+<p>While <em>Squawk</em> provides a very nice synth, it wasn't optimized for a small footprint. Songs were not very efficient in size, so Joeri Gantois aka JO3RI asked Davey to help him work on a new song format, and so ATMlib was born.</p>
+<ul>
+<li><strong>4 channels.</strong> Default mix: pulse, square, saw, noise. Any channel can be compiled to pulse, square, saw, noise or off.</li>
+<li><strong>Tiny songs.</strong> A song is a compact command stream of tracks that call each other. A good in-game loop fits in 50 to 100 bytes, a three-minute song in about 1.5 KB.</li>
+<li><strong>Song + SFX.</strong> The background score keeps running while a one-track sound effect takes one voice and gives it back when it ends.</li>
+<li><strong>Cues.</strong> <code>ATM_CUE(id)</code> in a score; the sketch reads it with <code>ATM.check()</code> to sync animation or gameplay.</li>
+<li><strong>Compile-time config.</strong> Waveforms, effects, functions and octaves can be switched off to save flash and ISR cycles.</li>
+<li><strong>One document.</strong> This README is both the user manual and the songwriting guide, for people and for AI assistants: give an assistant this file and the <code>ATMlib</code> folder and it can write songs.</li>
+</ul>
+<p><strong>Contributors:</strong> Davey Taylor (ATMsynth, effects), Joeri Gantois (effects, song format, TEAM a.r.g. tools).</p>
+<h2>Quick start</h2>
+<ol>
+<li>Install ATMlib (Arduino Library Manager, or copy this folder into your Arduino <code>libraries</code> folder).</li>
+<li>Copy <code>docs/ATMconfig.h</code> into your sketch folder (optional, see <em>Compile-time config</em>). Without it every effect, function and octave is compiled in.</li>
+<li>Put your song in <code>song.h</code> (see the examples in <code>examples/</code>) and play it:</li>
+</ol>
+<pre><code class="language-cpp">#include &lt;Arduino.h&gt;
+#include &lt;Arduboy2.h&gt;
+#include &quot;ATMconfig.h&quot;      // optional
+#include &lt;ATMlib.h&gt;
+#include &quot;song.h&quot;           // your song: const uint8_t PROGMEM array, includes &lt;ATMcmds.h&gt;
+
+Arduboy2Base arduboy;
+ATMsynth ATM;
+
+void setup() {
+  arduboy.begin();
+  arduboy.setFrameRate(60);
+  arduboy.audio.on();       // make sure sound was not muted by a previous sketch
+  ATM.play(starLight);      // the array name from song.h
+}
+
+void loop() {
+  if (!arduboy.nextFrame()) return;
+  arduboy.pollButtons();
+  if (arduboy.justPressed(A_BUTTON)) ATM.playPause();
+}
+</code></pre>
+<p>A song is an array of bytes written with the <code>ATM_*</code> macros from <code>ATMcmds.h</code>. A complete 73-byte example is in section 8.7. The format is described in sections 2 and 3, and the songwriting guide starts at section 0.</p>
+<h2>Library overview</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File / folder</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/ATMlib.h</code>, <code>src/ATMlibimpl.h</code></td>
+<td>Playroutine, ISR mixer, the <code>ATMsynth</code> class</td>
+</tr>
+<tr>
+<td><code>src/ATMcmds.h</code></td>
+<td>Notes C2 to D7 and all song and effect macros (<code>ATM_NOTE_*</code>, <code>ATM_VOL</code>, <code>ATM_GOTO</code>, ...), with the bytes each one uses</td>
+</tr>
+<tr>
+<td><code>docs/ATMconfig.h</code></td>
+<td>Template for the compile-time options (copy it into the sketch)</td>
+</tr>
+<tr>
+<td><code>docs/index.html</code></td>
+<td>The documentation web page, generated from this README by <code>extras/tools/readme_to_html.py</code></td>
+</tr>
+<tr>
+<td><code>examples/loops/&lt;name&gt;/</code></td>
+<td>Songs that loop forever, one Arduino sketch per song (<code>&lt;name&gt;.ino</code>, <code>song.h</code>, <code>ATMconfig.h</code>, <code>bitmaps.h</code>). <code>inGameSongs</code> holds 30 small loops in one sketch: A switches song, B pauses</td>
+</tr>
+<tr>
+<td><code>examples/songs/&lt;name&gt;/</code></td>
+<td>One-shot and long songs: Cutlass Cove, Midnight Run, Orbital Rush</td>
+</tr>
+<tr>
+<td><code>examples/soundEffects/</code></td>
+<td>Sound-effect examples</td>
+</tr>
+<tr>
+<td><code>extras/</code></td>
+<td>Reference tables (<code>frequencyToTone.md</code>, <code>notesInChords.md</code>) and <code>tools/</code>: simulator, generators, converter</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Credits and license</h2>
+<ul>
+<li>Davey Taylor (STG): Squawk, ATMsynth, effects</li>
+<li>Joeri Gantois (JO3RI): original ATMlib song format, effects, TEAM a.r.g. tools</li>
+<li>This tree: command macros with byte counts, compile-time waveforms / effects / functions / octaves, <code>playSfx</code>, cues, the self-loop method, the example songs, the simulator and generators, the HTML tracker and this documentation</li>
+</ul>
+<p>See also <a href="https://t-arg.github.io/">t-arg.github.io</a> and the library notes on the Arduino Library Manager listing for ATMlib. Licensed under the BSD 3-Clause License, see <code>LICENSE</code>.</p>
+        </section>
+
+        <section id="api" class="content-section">
+<h1>API</h1>
+<h2>API</h2>
+<p>Create one <code>ATMsynth</code> and call these from the sketch. Every method except <code>play()</code> can be compiled out with an <code>ATM_FUNC_*</code> flag in <code>ATMconfig.h</code>; calling a removed method is a compile error.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>play(const byte *song)</code></td>
+<td>Start a packed song from PROGMEM (header + tracks).</td>
+</tr>
+<tr>
+<td><code>playPause()</code></td>
+<td>Toggle pause / resume.</td>
+</tr>
+<tr>
+<td><code>pause()</code> / <code>resume()</code></td>
+<td>Explicit pause control.</td>
+</tr>
+<tr>
+<td><code>stop()</code></td>
+<td>Halt playback.</td>
+</tr>
+<tr>
+<td><code>muteChannel(ch)</code> / <code>unMuteChannel(ch)</code></td>
+<td>Silence or restore one of CH0 to CH3.</td>
+</tr>
+<tr>
+<td><code>playSfx(const byte *track, byte ch)</code></td>
+<td>Play a raw command stream on one channel. Music on the other channels continues.</td>
+</tr>
+<tr>
+<td><code>check()</code></td>
+<td>Last <code>ATM_CUE</code> byte, then clears it (0 if none since the last read).</td>
+</tr>
+<tr>
+<td><code>check(uint8_t id)</code></td>
+<td>1 if the last cue equals <code>id</code> (does not clear).</td>
+</tr>
+<tr>
+<td><code>setTempo(byte t)</code></td>
+<td>Set the tempo (ticks per second, see section 5.1) for songs and sound effects.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Channels:</strong> <code>CH_ZERO</code> (0), <code>CH_ONE</code> (1), <code>CH_TWO</code> (2), <code>CH_THREE</code> (3). Defaults at compile time: CH0 pulse, CH1 square, CH2 saw, CH3 noise (change them in <code>ATMconfig.h</code> and rebuild).</p>
+<h2>Sound effects</h2>
+<p>There are two ways to play a sound effect over a running song. The sketch <code>examples/soundEffects/sfxDemo</code> has 45 effects in each style, in the same order, so you can compare them with the A and B buttons (A = poke, B = <code>playSfx</code>, LEFT / RIGHT = next effect, UP = next song, DOWN = pause). The screen shows the name and byte size of each effect.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>ATM.playSfx()</code></th>
+<th>Poke</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Effect is</td>
+<td>an ordinary ATMlib command stream (<code>VOL</code>, <code>SL_VOL</code>, <code>SL_FRQ</code>, <code>GLIS</code>, <code>ARP</code>, <code>VIB</code>, <code>TREM</code>, notes)</td>
+<td>a list of 4-byte segments (volume fade, start frequency, slide, length)</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>7 to 19 bytes for the demo effects</td>
+<td>5 to 17 bytes for the demo effects</td>
+</tr>
+<tr>
+<td>Timing</td>
+<td>song ticks (follows the song tempo)</td>
+<td>frames, 60 per second, independent of the song</td>
+</tr>
+<tr>
+<td>Needs</td>
+<td><code>ATM_FUNC_SFX 1</code></td>
+<td><code>ATM_FUNC_MUTE 1</code>, <code>ATM_FUNC_UNMUTE 1</code>, a call to <code>sfxUpdate()</code> once per frame</td>
+</tr>
+<tr>
+<td>While the song is paused</td>
+<td>works</td>
+<td>needs a small workaround (below)</td>
+</tr>
+<tr>
+<td>Sounds like</td>
+<td>whatever the playroutine can do (arpeggios, vibrato, glissando)</td>
+<td>simple beeps, sweeps and fades</td>
+</tr>
+</tbody>
+</table></div>
+<h3><code>playSfx</code></h3>
+<p>A one-track effect is a PROGMEM byte list that ends with <code>ATM_STOP_CHAN</code>. <code>ATMcmds.h</code> provides a wrapper:</p>
+<pre><code class="language-cpp">ATM_SFX_TRACK(sfxJump,
+  ATM_VOL(50),
+  ATM_SL_VOL((uint8_t)-3),   // fade out
+  ATM_GLIS(0),               // glide up one semitone per tick
+  ATM_NOTE_C4,
+  ATM_DELAY(14)
+);
+// expands to: const uint8_t sfxJump[] PROGMEM = { ..., ATM_STOP_CHAN };
+</code></pre>
+<p>Play it with <code>ATM.playSfx(sfxJump, CH_ONE);</code>. The effect takes the channel for its duration, silences the song on that channel (even while the song is paused) and gives the channel back when it ends. Nothing else is needed: no mute calls. The usual pattern is to put hits on the noise channel (<code>CH_THREE</code>) or on a voice that is quiet in the song. <code>playSfx()</code> also works with no song playing.</p>
+<ul>
+<li><strong>Timing follows the song tempo.</strong> Delays are in ticks, so the same effect lasts about 30 % shorter in a song at 52 than in a song at 38. Do not put <code>ATM_SET_TEMPO</code> in an effect: it changes the tempo of the song as well.</li>
+<li><strong>One track, no calls.</strong> <code>GOTO</code> and <code>REPEAT</code> need other tracks, so an effect is a flat list of commands.</li>
+<li><strong>One slide slot per channel</strong> (section 4.5): <code>SL_VOL</code> and <code>SL_FRQ</code> replace each other. For a pitch sweep with a fade use <code>GLIS</code> plus <code>SL_VOL</code>.</li>
+</ul>
+<h3>Poke</h3>
+<p>The effect writes the oscillator registers directly, once per frame, instead of going through a track. <code>examples/soundEffects/sfxDemo/sfx.h</code> is the player (about 70 lines; copy it with the sketch). An effect is a list of segments and an end marker:</p>
+<pre><code class="language-cpp">SFX_SEG(m, SFX_HZ(1320), SFX_SL(0), 4)    // m = volume shift 0..3, start Hz, slide Hz/frame, frames
+SFX_SEG(m, SFX_HZ(1760), SFX_SL(0), 14)
+SFX_END
+</code></pre>
+<p>Volume at each frame is <code>min(63, framesLeft &lt;&lt; m)</code>, so every segment fades out; <code>m</code> sets how long it stays loud (3 = short and loud, 0 = long and soft). A segment is 4 bytes, plus 1 for the end marker. Play it with <code>sfxPlay(effect, channel)</code> and call <code>sfxUpdate()</code> once per frame (it must be 60 times a second, e.g. right after <code>nextFrame()</code>).</p>
+<ul>
+<li><strong>Units.</strong> The oscillator frequency unit is 31250 / 65536 = 0.4768 Hz; <code>SFX_HZ()</code> and <code>SFX_SL()</code> convert. Keep the pitch between 40 Hz and 7800 Hz and the slide within about +-240 Hz per frame (<code>SFX_SL</code> is applied four times per frame).</li>
+<li><strong>Mute.</strong> The player mutes its channel with <code>ATM.muteChannel()</code> so the playroutine does not overwrite the values. The playroutine clears every mute when a song restarts a loop, so the mute is <strong>re-asserted every frame</strong> (that is why <code>sfxUpdate()</code> must run every frame), and each mute change is wrapped in <code>cli()</code> / <code>SREG</code> because the playroutine runs in an interrupt.</li>
+<li><strong>Noise channel (CH3).</strong> Never write <code>osc[3].freq</code>: it holds the noise shift register. The player only sets the volume there (halved).</li>
+<li><strong>A running song is required.</strong> The poke only works while the playroutine interrupt is running, so not after a one-shot song has ended; use <code>playSfx</code> there.</li>
+<li><strong>While paused.</strong> <code>ATM.pause()</code> makes the playroutine set the volume of every channel without a <code>playSfx</code> to 0 about 38 times a second, which would chop a poked effect. The demo starts a 4-byte silent <code>playSfx</code> on the effect's channel first (<code>ATM.playSfx(pokeHold, ch)</code> with <code>ATM_SFX_TRACK(pokeHold, ATM_VOL(0), ATM_DELAY(40))</code>), which keeps the playroutine off that channel.</li>
+<li>Starting a poke effect while a <code>playSfx</code> runs on the same channel (or the other way round) makes one of them silent. The demo stops the poke effect (<code>sfxStop()</code>) before <code>playSfx</code>.</li>
+</ul>
+<h3>Keep the music quieter than the effects</h3>
+<p><strong>In-game music should play at about 60 % of the volume used for title music</strong> whenever the game uses sound effects; effects at full volume are otherwise lost behind the song. Title or menu music (no effects) can stay at 100 %. Do not scale the volume with a runtime control; scale the numbers in the song at compile time, which costs no bytes:</p>
+<pre><code class="language-cpp">#define MUSIC_VOL_PCT 60                       // 100 = original
+#define MV(v) ((v) * MUSIC_VOL_PCT / 100)
+// the fade step, scaled the same way and never below 1 (a 0 would stop the fade)
+#define MS(n) ((uint8_t)-((((n) * MUSIC_VOL_PCT + 50) / 100) &lt; 1 ? 1 : (((n) * MUSIC_VOL_PCT + 50) / 100)))
+
+ATM_VOL(MV(34)), ATM_SL_VOL(MS(2)), ...        // instead of ATM_VOL(34), ATM_SL_VOL((uint8_t)-2)
+</code></pre>
+<p>Scale <strong>both</strong>: if only <code>ATM_VOL</code> is scaled, every note starts lower but fades at the old rate and dies sooner, so the song sounds clipped and drier. Scaling the fade step too keeps the shape. A fade step of 1 cannot be made smaller, so very slow fades (<code>SL_VOL(-1)</code>) still end somewhat earlier at 60 % than in the original. All five songs in <code>sfxDemo/</code> use these macros (<code>MUSIC_VOL_PCT</code> is at the top of <code>song.h</code>); <code>extras/tools/gen_demo_songs.py</code> emits them.</p>
+<h2>Cues</h2>
+<p>Put <code>ATM_CUE(id)</code> anywhere in a score (2 bytes) and poll it from the sketch:</p>
+<pre><code class="language-cpp">uint8_t id = ATM.check();      // returns the last cue and clears it
+if (ATM.check(3)) {
+  // last cue was 3: e.g. fire a sprite frame (check(id) does not clear)
+}
+</code></pre>
+<p>A cue is overwritten by the next one if the sketch does not poll often enough. Escaper Droid puts <code>ATM_CUE(1)</code> in its kick track so a droid sprite dances on the beat.</p>
+        </section>
+
+        <section id="config" class="content-section">
+<h1>Config</h1>
+<h2>Compile-time config</h2>
+<p>Waveforms, effects, functions and octaves are fixed at compile time. Copy <code>docs/ATMconfig.h</code> into the sketch folder as <code>ATMconfig.h</code>, edit it and rebuild. Every flag defaults to <strong>on</strong>, including when the sketch has no <code>ATMconfig.h</code>. <code>1</code> or <code>TRUE</code> compiles a feature in, <code>0</code> or <code>FALSE</code> leaves it out.</p>
+<ul>
+<li><strong>Waveforms:</strong> <code>ATM_WAVE_CH0</code> to <code>ATM_WAVE_CH3</code> = <code>ATM_WAVE_PULSE</code> (0), <code>ATM_WAVE_SQUARE</code> (1), <code>ATM_WAVE_NOISE</code> (2, use on CH3), <code>ATM_WAVE_SAW</code> (3) or <code>ATM_WAVE_OFF</code> (255, no mixer for that channel = smaller ISR and fewer cycles). If no channel is noise, the LFSR is left out of the ISR.</li>
+<li><strong><code>ATM_ALT_WIRING</code>:</strong> 0 = stock Arduboy speaker on OCR4A only; 1 = also drive OCR4D (homemade or dual-pin wiring).</li>
+<li><strong>Effects, functions, octaves:</strong> switches such as <code>ATM_FX_ARP</code>, <code>ATM_FUNC_SFX</code>, <code>ATM_OCTAVE_6</code>. <code>ATM.play()</code> is always compiled. <code>ATM_FUNC_PLAYPAUSE</code> needs pause and resume.</li>
+</ul>
+<div class="note">
+<p><strong>Warning:</strong> the song bytes are never rewritten. If a flag is 0 and a song or sound effect still uses that effect, function or octave, playback breaks: the player ignores the command and does not consume its parameter bytes, a removed function will not compile, and an excluded note is silent. That is the sketch author's responsibility.</p>
+</div>
+<p>The full template, <code>docs/ATMconfig.h</code> (you can also <a href="https://t-arg.github.io/ATMlib/ATMconfig.h" download="ATMconfig.h">download ATMconfig.h</a>):</p>
+<pre><code class="language-cpp">#ifndef _ATMCONFIG_H_
+#define _ATMCONFIG_H_
+
+// Waveforms are fixed at compile time. Change these, then recompile.
+// ATM_WAVE_PULSE  0
+// ATM_WAVE_SQUARE 1
+// ATM_WAVE_NOISE  2   (use on channel 3; ATM_NOISE() is a song macro)
+// ATM_WAVE_SAW    3
+// ATM_WAVE_OFF    255  (no mixer for this channel — smaller ISR)
+
+#ifndef ATM_WAVE_PULSE
+#define ATM_WAVE_PULSE  0
+#define ATM_WAVE_SQUARE 1
+#define ATM_WAVE_NOISE  2
+#define ATM_WAVE_SAW    3
+#define ATM_WAVE_OFF    255
+#endif
+
+#ifndef ATM_WAVE_CH0
+#define ATM_WAVE_CH0 ATM_WAVE_PULSE
+#endif
+#ifndef ATM_WAVE_CH1
+#define ATM_WAVE_CH1 ATM_WAVE_SQUARE
+#endif
+#ifndef ATM_WAVE_CH2
+#define ATM_WAVE_CH2 ATM_WAVE_SAW
+#endif
+#ifndef ATM_WAVE_CH3
+#define ATM_WAVE_CH3 ATM_WAVE_NOISE
+#endif
+
+// Example: drop ch2 from the mixer
+// #define ATM_WAVE_CH2 ATM_WAVE_OFF
+
+// 0 = stock Arduboy speaker on OCR4A only
+// 1 = also drive OCR4D (homemade / dual-pin wiring)
+#ifndef ATM_ALT_WIRING
+#define ATM_ALT_WIRING 0
+#endif
+
+// ---------------------------------------------------------------------------
+// Effects, functions, octaves. 1 or TRUE = compile in. 0 or FALSE = leave out.
+//
+// WARNING: the tracker still writes the same song bytes. Nothing is stripped
+// from a score. If a flag is 0 and a song or SFX still uses that effect,
+// function, or octave, the sketch breaks: the player ignores the command and
+// does not consume its parameter bytes, a removed function will not compile,
+// and an excluded note is silent. That is the sketch author's responsibility.
+//
+// A sketch with no ATMconfig.h compiles all of these in. The 1s below match that.
+// ATM.play() is always compiled. ATM_FUNC_PLAYPAUSE needs PAUSE and RESUME.
+// ---------------------------------------------------------------------------
+
+// Effects (command + per-tick code, and the channel fields they need)
+#ifndef ATM_FX_VOLUME
+#define ATM_FX_VOLUME 1       // ATM_VOL
+#endif
+#ifndef ATM_FX_VOL_SLIDE
+#define ATM_FX_VOL_SLIDE 1    // ATM_SL_VOL / ATM_SL_VOL_ADV / ATM_SL_VOL_OFF
+#endif
+#ifndef ATM_FX_FREQ_SLIDE
+#define ATM_FX_FREQ_SLIDE 1   // ATM_SL_FRQ / ATM_SL_FRQ_ADV / ATM_SL_FRQ_OFF
+#endif
+#ifndef ATM_FX_ARP
+#define ATM_FX_ARP 1          // ATM_ARP / ATM_ARP_OFF
+#endif
+#ifndef ATM_FX_NOISE
+#define ATM_FX_NOISE 1        // ATM_NOISE / ATM_NOISE_OFF (retrigger)
+#endif
+#ifndef ATM_FX_TRANSPOSE
+#define ATM_FX_TRANSPOSE 1    // ATM_ADD_TRA / ATM_SET_TRA / ATM_TRA_OFF
+#endif
+#ifndef ATM_FX_TREMOLO
+#define ATM_FX_TREMOLO 1      // ATM_TREM / ATM_TREM_OFF
+#endif
+#ifndef ATM_FX_VIBRATO
+#define ATM_FX_VIBRATO 1      // ATM_VIB / ATM_VIB_OFF
+#endif
+#ifndef ATM_FX_GLISSANDO
+#define ATM_FX_GLISSANDO 1    // ATM_GLIS / ATM_GLIS_OFF
+#endif
+#ifndef ATM_FX_NOTE_CUT
+#define ATM_FX_NOTE_CUT 1     // ATM_CUT / ATM_CUT_OFF
+#endif
+#ifndef ATM_FX_CUE
+#define ATM_FX_CUE 1          // ATM_CUE command (stores the byte)
+#endif
+#ifndef ATM_FX_TEMPO
+#define ATM_FX_TEMPO 1        // ATM_ADD_TEMPO / ATM_SET_TEMPO in the score
+#endif
+#ifndef ATM_FX_GOTO_ADV
+#define ATM_FX_GOTO_ADV 1     // ATM_GOTO_ADV
+#endif
+#ifndef ATM_FX_STOP
+#define ATM_FX_STOP 1         // ATM_STOP_CHAN
+#endif
+
+// Functions (calling one that is 0 is a compile error)
+#ifndef ATM_FUNC_STOP
+#define ATM_FUNC_STOP 1       // ATM.stop()
+#endif
+#ifndef ATM_FUNC_PAUSE
+#define ATM_FUNC_PAUSE 1      // ATM.pause()
+#endif
+#ifndef ATM_FUNC_RESUME
+#define ATM_FUNC_RESUME 1     // ATM.resume()
+#endif
+#ifndef ATM_FUNC_PLAYPAUSE
+#define ATM_FUNC_PLAYPAUSE 1  // ATM.playPause() — needs PAUSE and RESUME
+#endif
+#ifndef ATM_FUNC_MUTE
+#define ATM_FUNC_MUTE 1       // ATM.muteChannel()
+#endif
+#ifndef ATM_FUNC_UNMUTE
+#define ATM_FUNC_UNMUTE 1     // ATM.unMuteChannel()
+#endif
+#ifndef ATM_FUNC_SFX
+#define ATM_FUNC_SFX 1        // ATM.playSfx()
+#endif
+#ifndef ATM_FUNC_TEMPO
+#define ATM_FUNC_TEMPO 1      // ATM.setTempo()
+#endif
+#ifndef ATM_FUNC_CUE
+#define ATM_FUNC_CUE 1        // ATM.check() / ATM.check(id)
+#endif
+
+// Notes. Each flag is one octave of the 1..63 note numbers.
+// C2-B2, C3-B3, C4-B4, C5-B5, C6-B6, C7-D7. Excluded notes are silent.
+#ifndef ATM_OCTAVE_2
+#define ATM_OCTAVE_2 1        // C2-B2
+#endif
+#ifndef ATM_OCTAVE_3
+#define ATM_OCTAVE_3 1        // C3-B3
+#endif
+#ifndef ATM_OCTAVE_4
+#define ATM_OCTAVE_4 1        // C4-B4
+#endif
+#ifndef ATM_OCTAVE_5
+#define ATM_OCTAVE_5 1        // C5-B5
+#endif
+#ifndef ATM_OCTAVE_6
+#define ATM_OCTAVE_6 1        // C6-B6
+#endif
+#ifndef ATM_OCTAVE_7
+#define ATM_OCTAVE_7 1        // C7-D7
+#endif
+
+#endif
+</code></pre>
+        </section>
+
+        <section id="format" class="content-section">
+<h1>Song format and commands</h1>
+<h2>2. Song data format</h2>
+<h3>2.1 Layout</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><strong>Section</strong></th>
+<th><strong>Field</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Track table</strong></td>
+<td></td>
+<td></td>
+<td><strong>Number of tracks and their addresses</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>Track count</td>
+<td>UBYTE (8-bits)</td>
+<td>Number of tracks in the file/array</td>
+</tr>
+<tr>
+<td></td>
+<td>Address track 1</td>
+<td>UWORD (16-bits)</td>
+<td>Location in the file/array for track 1</td>
+</tr>
+<tr>
+<td></td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td></td>
+<td>Address track <em><strong>N</strong></em></td>
+<td>UWORD (16-bits)</td>
+<td>Location in the file/array for track <em><strong>N</strong> (0 … 255)</em></td>
+</tr>
+<tr>
+<td><strong>Channel entry tracks</strong></td>
+<td></td>
+<td></td>
+<td><strong>For each channel, track to start with</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>Channel 0 track</td>
+<td>UBYTE (8-bits)</td>
+<td>Starting track index for channel 0</td>
+</tr>
+<tr>
+<td></td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td></td>
+<td>Channel 3 track</td>
+<td>UBYTE (8-bits)</td>
+<td>Starting track index for channel 3</td>
+</tr>
+<tr>
+<td><strong>Track 0</strong></td>
+<td></td>
+<td></td>
+<td><strong>Commands and parameters for track 0</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>Command 0</td>
+<td>UBYTE (8-bits)</td>
+<td>See command list</td>
+</tr>
+<tr>
+<td></td>
+<td><em>and its</em> Parameters</td>
+<td>none/variable</td>
+<td><em>See <strong>parameter list</strong> for each command</em></td>
+</tr>
+<tr>
+<td></td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td></td>
+<td>Command N</td>
+<td>UBYTE (8-bits)</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><em>and its</em> Parameters</td>
+<td>none/variable</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+</tr>
+<tr>
+<td><strong>Track <em>N</em></strong></td>
+<td></td>
+<td></td>
+<td><strong>Commands and parameters for track <em>N</em></strong> <em>(0-255)</em></td>
+</tr>
+</tbody>
+</table></div>
+<h3>2.2 Byte layout and rules</h3>
+<pre><code>byte 0               N = number of tracks
+bytes 1 .. 2N        N x uint16 little-endian: offset of each track,
+                     relative to the first byte AFTER the 4 channel-entry bytes
+next 4 bytes         entry track number for CH0, CH1, CH2, CH3
+then                 track data, tracks back to back, in table order
+</code></pre>
+<ul>
+<li><strong>Header cost = 1 + 2N + 4 bytes.</strong> Every extra track costs 2 bytes of table plus its closing <code>RETURN</code>. The 250-byte budgets are tight mostly because of this.</li>
+<li>Tracks are addressed by index 0..N-1 (max 255 tracks).</li>
+<li>A <em>called track</em> ends with <code>ATM_RETURN</code>. An <em>entry track</em> of a <strong>looping</strong> song ends with <code>ATM_GOTO(&lt;itself&gt;)</code> (section 6). An entry track of a <strong>one-shot</strong> song ends with <code>ATM_STOP_CHAN</code>. An <em>unused channel</em> points at a track that holds only <code>ATM_STOP_CHAN</code> (1 byte).</li>
+<li>The song array must be <code>const uint8_t PROGMEM</code>.</li>
+</ul>
+<h2>3. Command reference</h2>
+<p>Values are from <code>ATMcmds.h</code> (the source of truth). Sections 3.1 and 3.3 are the byte-level spec (opcode ranges and effect numbers, with the bytes each one uses); 3.2 and 3.4 are the practical macro reference.</p>
+<h3>3.1 Opcode map</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><strong>Command (<em>X</em>)</strong></th>
+<th><strong>Parameter</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Bytes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0<br/>0x00</strong></td>
+<td></td>
+<td></td>
+<td>Silence (note off)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>1…63<br/>0x00+<strong>X</strong></strong></td>
+<td>note <em>(<strong>X</strong>)</em></td>
+<td>UBYTE (8-bits)</td>
+<td>Start playing note <em>[<strong>X</strong>]</em> where 1 is a C2 (see section 5.2).<br/>See <a href="https://github.com/T-arg/ATMlib/blob/HEAD/extras/frequencyToTone.md" title="Frequency to Tone table">Frequency to Tone</a><br/><strong><em>Note:</em></strong> everytime a note is played, volume is re-triggered</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64…159<br/>0x40…0x9F</strong></td>
+<td></td>
+<td></td>
+<td>Configure effects (fx)</td>
+<td>1 + params</td>
+</tr>
+<tr>
+<td></td>
+<td><em>See section 3.3</em></td>
+<td>none/variable</td>
+<td>Effect is <em>[<strong>X</strong> - 64]</em></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>160…223<br/>0x9F+<strong>t</strong></strong></td>
+<td>Ticks (<em><strong>t</strong></em>)</td>
+<td>UBYTE (8-bits)</td>
+<td>Delay for <em>[<strong>X</strong> - 159]</em> or <em>[<strong>t</strong>]</em> ticks<br/><strong><em>Note:</em></strong> delay of 0 does not exist and maximum is 64 ticks</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>224, <strong>Y</strong><br/>0xE0, <strong>Y</strong></strong></td>
+<td>Ticks (<em><strong>Y</strong></em>)</td>
+<td>VLE (8/16-bits)</td>
+<td>Long delay for <em>[<strong>Y</strong> + 65]</em> ticks<br/> <strong><em>Note:</em></strong> LONG delay starts at 1 higher than SHORT delay</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>252, N<br/>0xFC, N</strong></td>
+<td>Track <em><strong>N</strong></em></td>
+<td>UBYTE (8-bits)</td>
+<td>Call/run/goto specified track<br/>Track index where <em><strong>N</strong></em> is the number of the track to go to</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>253, Y, N<br/>0xFD, Y, N</strong></td>
+<td></td>
+<td></td>
+<td>Repeated call/run/goto specified track</td>
+<td>3</td>
+</tr>
+<tr>
+<td></td>
+<td>Loop count (<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bits)</td>
+<td>Repeat <em>[<strong>Y</strong> + 1]</em> times (total)</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>Track  <em><strong>N</strong></em></td>
+<td>UBYTE (8-bits)</td>
+<td>Track index where <em><strong>N</strong></em> is the number of the track to go to</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>254<br/>0xFE</strong></td>
+<td></td>
+<td></td>
+<td>Return/end of track marker</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>~~225…255~~</strong></td>
+<td></td>
+<td></td>
+<td>~~RESERVED~~</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h3>3.2 Core macros</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Macro</th>
+<th>Bytes</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ATM_NOTE_C2</code> .. <code>ATM_NOTE_D7</code></td>
+<td>1 byte, value 1..63</td>
+<td>Start a note. C2=1, C#2=2 ... B2=12, C3=13, A3=22, A4=34, A5=46, C6=49, D7=63. Sharps use an <strong>underscore</strong>: <code>ATM_NOTE_F5_</code> is F#5.</td>
+</tr>
+<tr>
+<td>raw <code>0x00</code></td>
+<td>1 byte</td>
+<td>Silence (note off). There is <strong>no</strong> <code>ATM_NOTE_OFF</code> macro. Often <code>ATM_VOL(0)</code> is used instead.</td>
+</tr>
+<tr>
+<td><code>ATM_DELAY(n)</code></td>
+<td><code>0x9F+n</code></td>
+<td>Wait n ticks, <strong>n = 1..64</strong>. <code>ATM_DELAY(0)</code> is <code>0x9F</code> = STOP, so never use 0.</td>
+</tr>
+<tr>
+<td>two delays in a row</td>
+<td></td>
+<td>Valid and seamless: <code>ATM_DELAY(64), ATM_DELAY(10)</code> = 74 ticks.</td>
+</tr>
+<tr>
+<td><code>ATM_LONG_DELAY(ticks)</code></td>
+<td><code>0xE0, ticks-65</code></td>
+<td>Wait <strong>65 to 192 ticks</strong> in 2 bytes (the byte after <code>0xE0</code> is a variable-length number, 7 bits per byte, the delay is that number + 65). For other lengths chain <code>ATM_DELAY</code>s: <code>ATM_LONG_DELAY(100), ATM_DELAY(30)</code> = 130 ticks. Pass the real tick count; do not pass 0 to 64 (the subtraction would wrap).</td>
+</tr>
+<tr>
+<td><code>ATM_GOTO(t)</code></td>
+<td><code>0xFC, t</code></td>
+<td>Call track t; continue after it returns.</td>
+</tr>
+<tr>
+<td><code>ATM_REPEAT(n, t)</code></td>
+<td><code>0xFD, n, t</code></td>
+<td>Call track t <strong>n+1 times</strong> in total. <code>REPEAT(3,t)</code> = 4 runs.</td>
+</tr>
+<tr>
+<td><code>ATM_RETURN</code></td>
+<td><code>0xFE</code></td>
+<td>End of a called track.</td>
+</tr>
+<tr>
+<td><code>ATM_STOP_CHAN</code></td>
+<td><code>0x9F</code></td>
+<td>Stop this channel <strong>and set its volume to 0</strong> (4.4). Use it for one-shots and unused channels. <strong>Never use it to loop</strong>: the restart leaves one silent tick.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Reserved range.</strong> Command bytes <code>225..255</code> are reserved and ignored. The former <code>0xFF</code> "embedded data" command (length + data bytes for the host) has been <strong>removed</strong> from the library; use <code>ATM_CUE(v)</code> (<code>0x57, v</code>, effect 23, read with <code>ATM.check()</code>) to signal the sketch instead. The Bytes columns match the <code>// uses N bytes</code> comments in <code>ATMcmds.h</code>.</p>
+<h3>3.3 Effect numbers (full detail)</h3>
+<p>Every effect is <code>64 + n</code>, i.e. <code>0x40 + n</code>, followed by its parameter bytes.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><strong>Effect</strong></th>
+<th><strong>Parameter</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Bytes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>64+0<br/>64<br/>0x40</strong></td>
+<td>set Volume (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Set volume to <em>[<strong>X</strong>]</em>.<br/><strong><em>Note:</em></strong> If the combined volume of all channels<br/>exceed 255 there may be rollover distortion. This<br/>should not be disallowed, as it may be usesful as<br/>an effects hack for the musician. There should<br/>however be a non-interfering warning when a<br/>musician enters a value above 63 for ch 1-3 or 32<br/>for ch 4 (noise). ch 4 the volume is counted double,<br/>so 32 is actually 64.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+1<br/>65<br/>0x41</strong></td>
+<td>slide Volume ON (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Slide the volume with an amount (positive or<br/>negative) of <em>[<strong>X</strong>]</em> for every tick.<br/><strong><em>Note:</em></strong> This results in a fade-in or fade-out<br/>effect. There should be a non-interfering warning<br/>when sliding would result in exceeding 63 for<br/>ch 1-3 and 32 for ch 4.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+2<br/>66<br/>0x42</strong></td>
+<td>slide Volume ON<br/>advanced (<em><strong>X</strong></em>) (<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td>Slide the volume with an amount (positive or<br/>negative) of <em>[<strong>X</strong>]</em> for every [<em><strong>Y</strong></em>] ticks.<br/><em>[<strong>Y</strong>]</em> includes 2 parameters: RRtttttt<br/>R = reserved and t = ticks.</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>64+3<br/>67<br/>0x43</strong></td>
+<td>slide Volume OFF</td>
+<td></td>
+<td>Stops the volume slide</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+4<br/>68<br/>0x44</strong></td>
+<td>slide Frequency ON (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Slide the frequency with an amount (positive or<br/>negative) of <em>[<strong>X</strong>]</em> for every tick. <br/><strong><em>Note:</em></strong> The amount of slide is limited<br/>between -127 to 127</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+5<br/>69<br/>0x45</strong></td>
+<td>slide Frequency ON<br/>advanced (<em><strong>X</strong></em>) (<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td>Slide the frequency with an amount (positive or<br/>negative) of <em>[<strong>X</strong>]</em> for every [<em><strong>Y</strong></em>] ticks.<br/><em>[<strong>Y</strong>]</em> includes 2 parameters: RRtttttt<br/>R = reserved and t = ticks.</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>64+6<br/>70<br/>0x46</strong></td>
+<td>slide Frequency OFF</td>
+<td></td>
+<td>Stops the frequency slide</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+7<br/>71<br/>0x47</strong></td>
+<td>set Arpeggio (<em><strong>X</strong></em>)(<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td>Next to the current playing note, play a second<br/>and third note <em>[<strong>X</strong>]</em> for every <em>[<strong>Y</strong>]</em> ticks.<br/><em>[<strong>X</strong>]</em> includes 2 parameters: AAAABBBB, where<br/>AAAA = base + amount to second note and<br/>BBBB = second note + amount to third note.<br/><em>[<strong>Y</strong>]</em> includes 4 parameters: FEDttttt,<br/>where F = reserved, E = toggle no third note,<br/>D = toggle retrigger, ttttt = tick amount.<br/><strong><em>Note:</em></strong> Arpeggio is used for playing 3 notes<br/>out of a chord indivually</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>64+8<br/>72<br/>0x48</strong></td>
+<td>Arpeggio OFF</td>
+<td></td>
+<td>Stops the arpeggio</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+9<br/>73<br/>0x49</strong></td>
+<td>SET Retriggering noise ON (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Noise channel consists of white noise. By setting<br/>retriggering <em>[<strong>X</strong>]</em> it swithes the entrypoint at<br/>a given speed. <em>[<strong>X</strong>]</em>  includes 2 parameters:<br/>AAAAAABB , where AAAAAA = entry point and<br/>BB = speed (0 = fastest, 1 = faster , 2 = fast)</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+10<br/>74<br/>0x4A</strong></td>
+<td>Retriggering noise OFF</td>
+<td></td>
+<td>Stops the retriggering for the noise on channel 3</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+11<br/>75<br/>0x4B</strong></td>
+<td>add Transposition (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Shifts the played notes by adding <em>[<strong>X</strong>]</em> to<br/>the existing transposition for all playing notes.<br/><strong><em>Note:</em></strong> The amount of shift is limited<br/>between -127 to 127. However there should be<br/>a non-interfering warning when transposing would<br/>result in exceeding 63 or get lower than 0</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+12<br/>76<br/>0x4C</strong></td>
+<td>set Transposition (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Shifts the played notes by setting the transposition<br/>to [<strong>X</strong>]<em> for all playing notes.<br/></em><em><em>Note:</em></em>* The amount of shift is limited<br/>between -127 to 127. However there should be a<br/>non-interfering warning when transposing would<br/>result in exceeding 63 or get lower than 0</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+13<br/>77<br/>0x4D</strong></td>
+<td>Transposition OFF</td>
+<td></td>
+<td>Stops the transposition</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+14<br/>78<br/>0x4E</strong></td>
+<td>set Tremolo (<em><strong>X</strong></em>)(<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td><em>[<strong>X</strong>]</em> sets Depth.<br/><em>[<strong>Y</strong>]</em> includes 4 parameters<br/>RxxBBBBB R = Retrig, x = reserved , B = rate<br/><strong><em>Note:</em></strong> Tremolo and Vibrato can <strong>NOT</strong><br/>be combined in the same stack</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>64+15<br/>79<br/>0x4F</strong></td>
+<td>Tremolo OFF</td>
+<td></td>
+<td>Stops the tremolo</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+16<br/>80<br/>0x50</strong></td>
+<td>set Vibrato (<em><strong>X</strong></em>)(<em><strong>Y</strong></em>)</td>
+<td>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td><em>[<strong>X</strong>]</em> sets Depth.<br/><em>[<strong>Y</strong>]</em> includes 4 parameters<br/>RxxBBBBB R = Retrig, x = reserved , B = rate<br/><strong><em>Note:</em></strong> Tremolo and Vibrato can <strong>NOT</strong><br/>be combined in the same stack</td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>64+17<br/>81<br/>0x51</strong></td>
+<td>Vibrato OFF</td>
+<td></td>
+<td>Stops the vibrato</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+18<br/>82<br/>0x52</strong></td>
+<td>SET Glissando (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td><em>[<strong>X</strong>]</em> includes 2 parameters: Vttttttt<br/>V = value ( 0 = go 1 note up, 1 = go 1 note down)<br/>and t = amount of ticks, between each step</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+19<br/>83<br/>0x53</strong></td>
+<td>Glissando OFF</td>
+<td></td>
+<td>Stops the Glissando</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+20<br/>84<br/>0x54</strong></td>
+<td>SET Note Cut (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td><em>[<strong>X</strong>]</em> sets the equal amount of ticks<br/>between note ON and OFF</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+21<br/>85<br/>0x55</strong></td>
+<td>Note Cut OFF</td>
+<td></td>
+<td>Stops the Note Cut</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>64+22<br/>86<br/>0x56</strong></td>
+<td><em>unused</em></td>
+<td></td>
+<td>Not implemented by the playroutine (there is no <code>ATM_WAVEFORM</code>). Waveforms are chosen at compile time in <code>ATMconfig.h</code>.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>64+23<br/>87<br/>0x57</strong></td>
+<td>CUE (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>Signals the sketch: stores byte <em>[<strong>X</strong>]</em> which the sketch reads with <code>ATM.check()</code> (returns it once, then 0).<br/>Use <code>ATM_CUE(x)</code> to sync game events with the music</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+<td><strong>…</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>64+92<br/>156<br/>0x9C</strong></td>
+<td> ADD song tempo (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>adds <em>[<strong>X</strong>]</em> to the tempo of the song.<br/>Total value should be between 0 - 127<br/><strong><em>Note:</em></strong> the higher the tempo to more CPU it takes.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+93<br/>157<br/>0x9D</strong></td>
+<td> SET song tempo (<em><strong>X</strong></em>)</td>
+<td>UBYTE (8-bit)</td>
+<td>(re-)sets <em>[<strong>X</strong>]</em> as the tempo of the song.<br/>Standard is 25. Value should be between 0 - 127<br/><strong><em>Note:</em></strong> the higher the tempo to more CPU it takes.</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>64+94<br/>158<br/>0x9E</strong></td>
+<td>GOTO advanced<br/><br/>(<em><strong>W</strong></em>)<br/>(<em><strong>X</strong></em>)<br/>(<em><strong>Y</strong></em>)<br/>(<em><strong>Z</strong></em>)</td>
+<td><br/><br/>UBYTE (8-bit)<br/>UBYTE (8-bit)<br/>UBYTE (8-bit)<br/>UBYTE (8-bit)</td>
+<td><strong><em>Note:</em></strong> handy command for having an intro<br/>and a repeating song part<br/>For channel <strong>0</strong> go to track <strong>W</strong><br/>For channel <strong>1</strong> go to track <strong>X</strong><br/>For channel <strong>2</strong> go to track <strong>Y</strong><br/>For channel <strong>3</strong> go to track <strong>Z</strong></td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>64+95<br/>159<br/>0x9F</strong></td>
+<td>STOP current channel</td>
+<td></td>
+<td>channel is no longer being processed<br/><strong><em>Note:</em></strong> if all channels have reached STOP, the song ends</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Thoughts on effects:</h4>
+<p><strong>Note:</strong> These are the primitives to be implemented in the playroutine effects processor. Most will have several effect command numbers associated with them for various aspects of the same primitive. Effects can be combined but not stacked, but some combinations may have undesired/interesting interference.</p>
+<ul>
+<li>Volume slide: a gradual increasing or decreasing of the volume.</li>
+<li>Frequency slide: a gradual increasing or decreasing of the <a href="https://en.wikipedia.org/wiki/Frequency" title="frequency wikipedia">frequency</a>.</li>
+<li>Arpeggio: a group of <a href="https://en.wikipedia.org/wiki/Musical_note" title="note wikipedia">notes</a> which are rapidly and automatically played one after the other.</li>
+<li>Retriggering (on <a href="https://en.wikipedia.org/wiki/Musical_note" title="note wikipedia">note</a> or by automation): oscillators are restarted either automatically or at the start of each new note.</li>
+<li>Transposition (also for microtonals): play <a href="https://en.wikipedia.org/wiki/Musical_note" title="note wikipedia">notes</a> in a different key, or fine tune notes to provide microtonals; frequencies that are in between notes.</li>
+<li>Tremolo: a slight, rapid and regular fluctuation in the amplitude/volume of a <a href="https://en.wikipedia.org/wiki/Musical_note" title="note wikipedia">note</a>.</li>
+<li>Vibrato: a slight, rapid and regular fluctuation in the <a href="https://en.wikipedia.org/wiki/Pitch_(music)" title="pitch wikipedia">pitch</a> of a <a href="https://en.wikipedia.org/wiki/Musical_note" title="note wikipedia">note</a>.</li>
+<li>Glissando: controls if and how a gradual frequency slide "snaps" to adjacent notes.</li>
+<li>Note cut (with delay and automation): provides a method to stutter and adjust note timing.</li>
+</ul>
+<h3>3.4 Effect macros (all are <code>64+n</code>, i.e. <code>0x40+n</code>)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Macro</th>
+<th>Bytes</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ATM_VOL(v)</code></td>
+<td><code>0x40, v</code></td>
+<td>Set volume 0..63. Also stores v as the volume re-applied at every later note-on (see 4.2).</td>
+</tr>
+<tr>
+<td><code>ATM_SL_VOL(s)</code></td>
+<td><code>0x41, s</code></td>
+<td>Add signed s to the volume <strong>every tick</strong> (clamped at 0 only, see 4.9: a positive slide is NOT clamped at 63). A negative value gives a decay after each note.</td>
+</tr>
+<tr>
+<td><code>ATM_SL_VOL_ADV(s, t)</code></td>
+<td><code>0x42, s, t</code></td>
+<td>Slide s every t+1 ticks (<code>t</code> is the low 6 bits; bit 7 = no clamping at all). Used for long fades (4.9). <strong>Caution:</strong> with this form the volume is <em>not</em> re-applied at note-on (4.2).</td>
+</tr>
+<tr>
+<td><code>ATM_SL_VOL_OFF</code></td>
+<td><code>0x43</code></td>
+<td>Stop the volume slide.</td>
+</tr>
+<tr>
+<td><code>ATM_SL_FRQ(s)</code> / <code>_ADV</code> / <code>_OFF</code></td>
+<td><code>0x44</code> / <code>0x45</code> / <code>0x46</code></td>
+<td>Frequency slide (pitch drop for kicks: <code>-127</code>). Also disables note-on volume re-apply.</td>
+</tr>
+<tr>
+<td><code>ATM_ARP(a, y)</code></td>
+<td><code>0x47, a, y</code></td>
+<td>Arpeggio, see 4.6.</td>
+</tr>
+<tr>
+<td><code>ATM_ARP_OFF</code></td>
+<td><code>0x48</code></td>
+<td>Arpeggio off.</td>
+</tr>
+<tr>
+<td><code>ATM_NOISE(x)</code> / <code>ATM_NOISE_OFF</code></td>
+<td><code>0x49, x</code> / <code>0x4A</code></td>
+<td>Noise retrigger: <code>x = AAAAAABB</code> entry point + speed (0 fastest). CH3 only.</td>
+</tr>
+<tr>
+<td><code>ATM_ADD_TRA(d)</code></td>
+<td><code>0x4B, d</code></td>
+<td>Add signed d to the transposition.</td>
+</tr>
+<tr>
+<td><code>ATM_SET_TRA(v)</code></td>
+<td><code>0x4C, v</code></td>
+<td>Set the transposition to signed v (semitones).</td>
+</tr>
+<tr>
+<td><code>ATM_TRA_OFF</code></td>
+<td><code>0x4D</code></td>
+<td>Transposition = 0.</td>
+</tr>
+<tr>
+<td><code>ATM_TREM(depth, rate)</code> / <code>_OFF</code></td>
+<td><code>0x4E, d, r</code> / <code>0x4F</code></td>
+<td>Tremolo: volume moves by <code>depth</code> every tick, reversing every rate+1 ticks (triangle). Shares state with vibrato, so one of the two per channel.</td>
+</tr>
+<tr>
+<td><code>ATM_VIB(depth, rate)</code> / <code>_OFF</code></td>
+<td><code>0x50, d, r</code> / <code>0x51</code></td>
+<td>Vibrato: frequency (Hz) moves by <code>depth</code> every tick, reversing every rate+1 ticks. <code>VIB(3,3)</code> is about +-24 cents at 880 Hz.</td>
+</tr>
+<tr>
+<td><code>ATM_GLIS(x)</code> / <code>_OFF</code></td>
+<td><code>0x52, x</code> / <code>0x53</code></td>
+<td>Glissando; bit 7 = direction (1 = down), low 7 bits = ticks per semitone step.</td>
+</tr>
+<tr>
+<td><code>ATM_CUT(n)</code> / <code>_OFF</code></td>
+<td><code>0x54, n</code> / <code>0x55</code></td>
+<td>Staccato <strong>gate</strong>: sound for n+1 ticks, silence for n+1 ticks, repeating. Use <code>0x20+n</code> so every note-on restarts it. Shares state with the arpeggio (not both on one channel) and <strong>only works with transposition = 0</strong> (4.9).</td>
+</tr>
+<tr>
+<td><code>ATM_CUE(v)</code></td>
+<td><code>0x57, v</code></td>
+<td>Hands a byte to the sketch (<code>ATM.check()</code>).</td>
+</tr>
+<tr>
+<td><code>ATM_ADD_TEMPO(v)</code></td>
+<td><code>0x9C, v</code></td>
+<td>Add to the tempo (the tempo is a byte, so <code>(uint8_t)-1</code> subtracts 1). Ritardando: one <code>ADD_TEMPO(-1)</code> per beat.</td>
+</tr>
+<tr>
+<td><code>ATM_SET_TEMPO(v)</code></td>
+<td><code>0x9D, v</code></td>
+<td>Set the tempo, 0..127, default 25.</td>
+</tr>
+<tr>
+<td><code>ATM_GOTO_ADV(a,b,c,d)</code></td>
+<td><code>0x9E, a,b,c,d</code></td>
+<td>Set the <strong>restart track</strong> for CH0..CH3 used when all channels have stopped (4.4). <strong>Obsolete for loops</strong> (it needs <code>STOP</code>, which leaves a silent tick); do not use it any more.</td>
+</tr>
+</tbody>
+</table></div>
+<h3>3.5 Writing rules for the <code>.h</code></h3>
+<ul>
+<li>Negative arguments need a cast: <code>ATM_SL_VOL((uint8_t)-5)</code>, <code>ATM_ADD_TRA((uint8_t)-4)</code>. Plain <code>-5</code> fails strict C++ narrowing.</li>
+<li>Sharps: <code>ATM_NOTE_F5_</code>, never <code>ATM_NOTE_F#5</code>.</li>
+<li>Use the macro for every note and delay; comment each track.</li>
+</ul>
+        </section>
+
+        <section id="playroutine" class="content-section">
+<h1>How the playroutine behaves</h1>
+<h2>4. How the playroutine really behaves</h2>
+<p>All of this is from <code>ATMlibimpl.h</code>. A Python model of it is <code>extras/tools/atmsim.py</code>.</p>
+<h3>4.1 Tick order and delay</h3>
+<p>Each tick, for channel 0, 1, 2, 3 in that order: apply effects (slides, arpeggio, ...), then, if the channel's delay is 0, run commands until one sets a delay. <code>ATM_DELAY(d)</code> makes the note/state last exactly <strong>d ticks</strong>. When a delay expires, the next command runs in that same tick, so chained delays and calls cost no extra tick.</p>
+<h3>4.2 Notes, volume and transposition</h3>
+<ul>
+<li>A note value 1..63 sets the pitch to <code>note + transposition</code> <strong>at the moment of the note-on</strong>. Changing the transposition later does not move a sounding note.</li>
+<li><strong>Keep <code>note + transposition</code> inside 1..63.</strong> With all octaves compiled in, the pitch table is read without bounds checking, so out-of-range values read garbage.</li>
+<li>At every note-on the volume is reset to the last <code>ATM_VOL(v)</code> value, <strong>but only when the active slide is a plain <code>ATM_SL_VOL</code>/none</strong> (config byte 0). With <code>SL_VOL_ADV</code> or any frequency slide active the volume is not reset. This is what makes "VOL(38) + SL_VOL(-2)" a plucky lead: every note starts at 38 and decays by 2 per tick.</li>
+<li>Volume range 0..63 per channel. The noise channel's volume is halved in the mixer. Very loud sums of all channels can distort.</li>
+</ul>
+<h3>4.3 Calls, the call stack and the track-0 trap</h3>
+<ul>
+<li><code>GOTO</code>/<code>REPEAT</code> push a return frame (counter, track, position). Maximum depth <strong>7</strong>.</li>
+<li>A call to the track the channel is <em>currently in</em> does <strong>not</strong> push; it just restarts that track, <strong>in the same tick</strong>, without touching volume or any other state. This is what the self-loop of section 6 is built on. (Because every channel starts with "current track = 0", the very first <code>GOTO(entry)</code> of a channel whose entry track is not 0 does push one frame, once; count it in the depth limit.)</li>
+<li><strong>Every channel starts with "current track = 0", whatever its entry track is.</strong> So a channel that calls track 0 from its entry track does not push a frame. When track 0 then returns with an empty stack, it simply restarts itself forever.
+  <strong>Rule: never call track 0 from another track.</strong> Track 0 may be used only as a channel entry (CH3 in Quest Theme) or as a dummy that nobody calls (the older songs have a "silent" track 0). An entry track 0 that ends with <code>ATM_GOTO(0)</code> is fine: that is a call to the track it is already in (see below).
+  <em>Measured example:</em> the rejected <code>pixelchase.h</code> had its melody bar as track 0. In the simulator CH0 plays bars 1-6 correctly, then repeats bar 1 forever and never stops, while the other three channels stop at tick 511 and the song never restarts.</li>
+<li><code>RETURN</code> with a repeat counter above 0, or with an empty stack, <strong>restarts the current track</strong> instead of leaving it. So ending an entry track with <code>RETURN</code> instead of <code>STOP</code> loops that track forever.</li>
+<li><code>REPEAT(n,t)</code> runs t n+1 times. Nested repeats are fine (counters are saved in the frame).</li>
+</ul>
+<h3>4.4 Stop, end of song and looping</h3>
+<ul>
+<li><code>STOP</code> <strong>sets the channel volume to 0</strong> (<code>ch-&gt;vol = 0</code>, <code>ATMlibimpl.h</code>, case 95) and parks the channel with an endless delay. When all four channels have stopped:</li>
+<li>if the sum of the four <code>GOTO_ADV</code> restart tracks is 0 (or <code>GOTO_ADV</code> was never executed) the song <strong>ends</strong>;</li>
+<li>otherwise every channel jumps to its restart track and the song <strong>continues</strong>.</li>
+<li><strong>This restart is the cause of the loop "hop".</strong> The channels that stopped first are silent (volume 0) from their <code>STOP</code> until the last one stops, and the restart itself costs one more tick, so every loop contains a tick in which <em>all four channels are silent</em>. The period is exactly right, but the seam is audible (about 30 ms at tempo 34). This was found by ear on Italo Night, Escaper Droid, Neon Heart, Quest Theme, Star Light and the first version of the in-game songs.</li>
+<li><strong>Looping songs therefore must not stop at all.</strong> Loop with a self-<code>GOTO</code> at the end of every channel's entry track (section 6). Do not use <code>STOP</code>, do not use <code>GOTO_ADV</code>.</li>
+<li><strong>One-shot songs</strong> end with <code>STOP</code> on every channel and contain no <code>GOTO_ADV</code> (Midnight Run, a 3-minute one-shot, has none. When Claude once left it in, the song restarted).</li>
+<li><em>Background, only for old files:</em> the restart is decided right after the last channel stops, inside the channel loop. If the last channel to stop is not CH3, the channels after it start the new loop one tick earlier than the ones before it, so all four channels had to stop on the same tick. The restart does not reset volume, slides, arpeggio or transposition. Both facts are irrelevant for a self-loop, but the second one still holds: <strong>state persists across the loop</strong>, so set what you need at the start of each channel's main track (typically <code>ATM_SET_TRA(0)</code>).</li>
+</ul>
+<h3>4.5 Slides</h3>
+<p><code>SL_VOL(s)</code> changes volume by s every tick. <code>SL_FRQ(-127)</code> on a square note makes the classic pitch-drop kick (Italo Night). After <code>SL_FRQ</code> the volume is not re-applied at note-on, so set <code>ATM_VOL</code> explicitly before the note.</p>
+<h3>4.6 Arpeggio</h3>
+<p><code>ATM_ARP(a, y)</code> plays three notes in rotation from the note you start:</p>
+<ul>
+<li><code>a = AAAABBBB</code>: second note = base + A semitones; third = second + B.</li>
+<li><code>y = FEDttttt</code>: <code>D</code> (0x20) = restart the rotation at every note-on; <code>E</code> (0x40) = no third note (two-note arp); <code>ttttt</code> = ticks per step minus one. <code>0x20</code> means one tick per step (about 11 rotations per second at tempo 34); <code>0x21</code> two ticks, etc.</li>
+<li>Chord values (README <code>extras/notesInChords.md</code> + inversions):</li>
+</ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Chord</th>
+<th><code>a</code></th>
+<th>Notes from base</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>major, root position</td>
+<td><code>0x43</code></td>
+<td>root, +4, +7</td>
+</tr>
+<tr>
+<td>minor, root position</td>
+<td><code>0x34</code></td>
+<td>root, +3, +7</td>
+</tr>
+<tr>
+<td>major, 1st inversion (3rd in bass)</td>
+<td><code>0x35</code></td>
+<td>e.g. A C F = F/A</td>
+</tr>
+<tr>
+<td>major, 2nd inversion (5th in bass)</td>
+<td><code>0x54</code></td>
+<td>e.g. G C E = C/G</td>
+</tr>
+<tr>
+<td>minor, 1st inversion</td>
+<td><code>0x45</code></td>
+<td>e.g. C E A = Am/C</td>
+</tr>
+<tr>
+<td>minor, 2nd inversion</td>
+<td><code>0x53</code></td>
+<td>e.g. E A C = Am/E</td>
+</tr>
+<tr>
+<td>maj7 colour (no 5th)</td>
+<td><code>0x47</code></td>
+<td>root, +4, +11 (used in Escaper Droid)</td>
+</tr>
+<tr>
+<td>m7 colour (no 5th)</td>
+<td><code>0x37</code></td>
+<td>root, +3, +10</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Inversions keep the stabs in one register.</strong> Italo Night plays every chord from around G3..B3 using <code>0x34 / 0x35 / 0x54</code> with a changing base note.</li>
+<li><strong>Do not combine <code>ATM_ARP</code> with transposition on the same channel.</strong> During arpeggio steps the playroutine adds the transposition a second time (<code>ATMlibimpl.h</code>, the line <code>ATM__FREQ(arpNote + ch-&gt;transConfig)</code> while <code>arpNote</code> already includes it). Put the arpeggio on one channel with explicit root notes, and use transposition on other channels.</li>
+<li><code>ATM_NOTE_x</code> after <code>ATM_ARP</code> sets the base note; a new note restarts the rotation when <code>0x20</code> is set.</li>
+</ul>
+<h3>4.7 Noise channel (CH3)</h3>
+<p>CH3 is noise; drums are made purely with <code>VOL</code> + <code>SL_VOL</code> + <code>DELAY</code> (no notes needed). Volume is halved in the mixer. See section 8.1 for the approved recipes.</p>
+<h3>4.8 Known traps in the library files</h3>
+<ul>
+<li><code>ATM_DELAY(0)</code> is the STOP byte.</li>
+<li>Note 1 is <strong>C2</strong> (<code>ATM_NOTE_C2</code>). Older documents called it C1 or C4: the name is a label, see section 5.2.</li>
+<li>README says tempo values are 0..127 and "the higher the tempo, the more CPU".</li>
+</ul>
+<h3>4.9 Effect details verified in <code>ATMlibimpl.h</code> (used by Cutlass Cove)</h3>
+<p>Per tick, per channel, the order is: noise retrigger, glissando, volume/frequency slide, arpeggio/cut, tremolo/vibrato, then the command stream.</p>
+<ul>
+<li><strong>One slide slot per channel.</strong> <code>SL_VOL</code>, <code>SL_VOL_ADV</code>, <code>SL_FRQ</code>, <code>SL_FRQ_ADV</code> share a single slide. Starting one replaces the other. Cannon boom on the bass: <code>ATM_SL_FRQ(-24)</code> for 16 ticks, then <code>ATM_SL_VOL(-3)</code> both ends the pitch slide and starts the volume decay.</li>
+<li><strong>Positive volume slides are not clamped at 63</strong> (a dangling <code>else</code> in the library: only freq is clamped above). <code>vol</code> is a byte, so a fade-in must be <strong>stopped on purpose</strong> (<code>ATM_SL_VOL_OFF</code>, or a new <code>ATM_SL_VOL</code>) before it reaches 63. Negative slides clamp at 0. Same for tremolo.</li>
+<li><strong>Fades:</strong> <code>ATM_VOL(0), ATM_SL_VOL_ADV(1, 8)</code> adds +1 every 9 ticks and, because the config byte is non-zero, notes do not reset the volume, so the fade runs straight through note-ons. Fade-out: <code>ATM_SL_VOL_ADV((uint8_t)-1, 5)</code> from a starting <code>ATM_VOL</code>. <code>SL_VOL_ADV</code> and <code>SL_FRQ</code> set the config byte, so afterwards use plain <code>ATM_SL_VOL(x)</code> (which sets config 0) before expecting note-on volume resets again.</li>
+<li><strong>Frequency slide</strong> <code>SL_FRQ(s)</code> moves the frequency by s <strong>Hz per tick</strong> (table of <code>extras/frequencyToTone.md</code>); clamped 0..9397.</li>
+<li><strong>Tremolo</strong> is a triangle LFO on the volume: the first half goes <em>down</em>. <code>ATM_TREM(1, 15)</code> = sea swell with a 32-tick period. <code>ATM_TREM(6, 0)</code> on a rising volume (<code>VOL(10), SL_VOL(2)</code>) = a snare roll in 8 bytes; end it with <code>ATM_TREM_OFF</code>.</li>
+<li><strong>Vibrato</strong> is the same on the frequency. A new note restarts the frequency, the LFO phase carries on, so the vibrato stays bounded.</li>
+<li><strong>Glissando</strong> <code>ATM_GLIS(x)</code>: moves the note by one semitone every <code>(x &amp; 0x7F)+1</code> ticks, upward, or downward when bit 7 is set (<code>0x82</code> = down, 3 ticks per step); stops at 1 and 63. End it with <code>ATM_GLIS_OFF</code>. <strong>Loop trap:</strong> the glissando step counter is not reset by <code>ATM_GLIS_OFF</code> or by a new note, it just freezes. If the glissando runs for a number of ticks that is not a multiple of its period <code>(x &amp; 0x7F)+1</code>, the next run starts at a different phase and every loop pass shifts by a tick or more (found in Orbital Rush: <code>GLIS(0x02)</code> = period 3 over 64 ticks). Pick a period that divides the run length (<code>GLIS(0x01)</code>, <code>0x03</code>, <code>0x07</code> over 64 ticks). The same holds for the vibrato/tremolo period (section 6). Check with the simulator that pass 1 and pass 2 are identical tick by tick.</li>
+<li><strong>Note cut is a repeating gate:</strong> after the note-on it sounds for n+1 ticks, is silent for n+1 ticks, then sounds again. With <code>ATM_CUT(0x23)</code> and 8-tick notes you get 4 ticks on, 4 off, exactly staccato. Notes longer than 2<em>(n+1) ticks come back to life, so keep the notes at one length. </em><em>With a non-zero transposition the "silence" plays note number = transposition</em>* (the table is read at index 0+tra, negative = garbage), so use <code>CUT</code> only where transposition is 0.</li>
+<li><strong>Noise retrigger</strong> <code>ATM_NOISE(x)</code> (x = entry point * 4 + speed; <code>0x14</code> = point 5, speed 0) reseeds the LFSR every tick = low rumble (thunder). It shares <code>reCount</code> with the volume buffer, so use it on CH3 where no notes are played, and call <code>ATM_NOISE_OFF</code> afterwards.</li>
+<li><strong>Cue:</strong> <code>ATM_CUE(v)</code> stores one byte; <code>ATM.check()</code> returns it and clears it, <code>ATM.check(id)</code> tests without clearing. A cue is overwritten by the next one if the sketch does not poll often enough. Put cues on a track that is already part of the beat sequence (2 bytes per marker).</li>
+<li><strong>Tempo changes</strong> are global (any channel); put them on CH3 so the tick domain stays easy to read. Ticks are all that other channels count, so a tempo change never breaks the alignment.</li>
+</ul>
+<h2>5. Timing, tempo and pitch</h2>
+<h3>5.1 Tempo</h3>
+<ul>
+<li>Default tempo (no <code>SET_TEMPO</code>) is 25. <code>cia = 15625 / tempo</code>.</li>
+<li><strong>Empirical rule (measured on real hardware):</strong> ticks per second ≈ the tempo value. An offline emulator that gives 2 ticks per second per tempo unit plays twice as fast as the hardware. Hence the house rule: <strong>double the emulator's tempo value</strong>.</li>
+<li>With 16 ticks per beat: <strong>BPM = tempo x 3.75.</strong> Examples: 24 -&gt; 90, 30 -&gt; 112.5, 32 -&gt; 120, <strong>34 -&gt; 127.5</strong>, 36 -&gt; 135, 40 -&gt; 150.</li>
+<li>Song length in seconds ≈ ticks / tempo. Quest Theme: 1024 ticks / 34 ≈ 30 s.</li>
+</ul>
+<h3>5.2 Pitch</h3>
+<ul>
+<li>The note names are not concert pitch. Working assumption used in all approved songs (stated in the Italo Night header): the table frequency is halved by the 31250 Hz mixing, so a note sounds about <strong>an octave above its name and about 80 cents flat</strong> (<code>ATM_NOTE_A2</code> ≈ 210 Hz).</li>
+<li>What matters is relative pitch and register. Registers (by label) that worked: lead A4..D6, chord arps G3..E4, bass A2..A3 (plus transposition), drums on the noise channel.</li>
+</ul>
+<h2>6. Hop-free loops: the self-loop (the most important section)</h2>
+<p>Let the loop be <code>L</code> ticks long (Quest Theme: 16 bars x 64 = 1024).</p>
+<p><strong>The method</strong></p>
+<ol>
+<li>Every channel's entry track ends with <strong><code>ATM_GOTO(&lt;that same track&gt;)</code></strong> instead of <code>ATM_STOP_CHAN</code>. A call to the track you are already in does not push the call stack: it jumps back to the first command of the track <strong>in the same tick</strong>. No tick is lost, nothing is silenced, volume and slides simply carry on.</li>
+<li>Every channel contains <strong>exactly <code>L</code> ticks of delay</strong> (not <code>L-1</code>). The last note of the last bar keeps its full delay.</li>
+<li>No <code>ATM_STOP_CHAN</code>, no <code>ATM_GOTO_ADV</code>, no trimmed delay, no <code>_last</code> variant tracks.</li>
+<li>An unused channel's entry track holds a single <code>ATM_STOP_CHAN</code> (1 byte); it is silent from tick 0, which is what you want.</li>
+<li>State persists across the loop (volume, slide, transposition, arpeggio). Set what the pass depends on at the start of each entry track (typically <code>ATM_SET_TRA(0)</code>), and let the state at the end equal the state at the start.</li>
+</ol>
+<pre><code>Song x[] = {
+  ...
+  //&quot;Track 3&quot; lead
+  ATM_VOL(38),
+  ATM_SL_VOL((uint8_t)-2),
+  ...bars...
+  ATM_GOTO(3),   // loop: restart this track (no STOP, no gap)
+</code></pre>
+<p><strong>Why the old method hopped</strong> is in 4.4 (<code>STOP</code> sets volume 0 and the restart tick is silent on all channels). The self-loop never stops, so there is no seam to hear. Confirmed by ear on the real hardware.</p>
+<p><strong>Details that matter</strong></p>
+<ul>
+<li><strong>Delay sum:</strong> if one channel sums to <code>L+1</code> or <code>L-1</code> it drifts by one tick against the others every loop. The simulator catches it (see below).</li>
+<li><strong>Call depth:</strong> an entry track other than 0 pushes one frame on its first <code>GOTO(itself)</code> (every channel starts with "current track = 0"). Entry track 0 (CH3 in Quest Theme) pushes none. Count this against the limit of 7.</li>
+<li><strong>Intro + body:</strong> give every channel an <em>entry track</em> <code>E = [GOTO intro, GOTO loopT]</code> and a <em>loop track</em> <code>loopT = [GOTO body, GOTO loopT]</code>. The intro plays once; the loop track repeats the body forever and calls itself. The body must start by setting everything it depends on (<code>ATM_VOL</code>, <code>ATM_SL_VOL</code>, <code>ATM_SET_TRA</code>, <code>ATM_ARP</code>). Star Light (<code>extras/tools/gen_starlight.py</code>) is built this way. A leftover slide counter of the intro can change a volume by a few units for a few ticks in the first body pass only; the note events are identical.</li>
+<li><strong>Cost:</strong> <code>GOTO</code> is 2 bytes where <code>STOP</code> was 1 (+1 per channel), <code>GOTO_ADV</code> (5 bytes) disappears, and every <code>_last</code> variant track (10 to 40 bytes plus 2 in the table) disappears because the last bar is the same as every other pass of that bar. Converting Italo Night saved 89 bytes (558 to 469), Escaper Droid 89, Neon Heart 89, Star Light 147.</li>
+<li><strong>Tempo command in the loop:</strong> a song whose drum track (the usual CH3 entry, track 0) begins with <code>ATM_SET_TEMPO</code> re-executes it every pass. It sets the same value, so it is harmless.</li>
+</ul>
+<p><strong>Proof, not belief.</strong> Simulate three loops (<code>extras/tools/atmsim.py</code>, <code>extras/tools/gen_quest.py</code>). All of these must hold:</p>
+<ul>
+<li><code>restarts == []</code> and no <code>STOP</code> after tick 0 (an unused channel's <code>STOP</code> at tick 0 is fine)</li>
+<li>for every tick <code>t &gt;= L</code>: <code>TIMELINE[t] == TIMELINE[t-L]</code> for all four channels (volume, and frequency whenever the volume is not 0; a silent channel's last pitch is irrelevant)</li>
+<li>the note events of loop 1, 2 and 3 are identical</li>
+<li>max call depth &lt;= 7</li>
+</ul>
+<p><strong>Converting an old STOP + GOTO_ADV song:</strong> <code>convert.py</code> (<code>extras/tools/convert.py</code>) does it automatically: it adds 1 to the last executed delay of every channel (the old loop was <code>L-1</code> ticks of delay plus one restart tick), turns the entry track's final <code>STOP</code> into <code>GOTO(entry)</code>, deletes <code>GOTO_ADV</code>, merges the tracks that became identical, and checks the result against the old song with the simulator and the real <code>ATMcmds.h</code>.</p>
+<p><strong>One-shot songs:</strong> no self-loop, no <code>GOTO_ADV</code>; channels end with <code>ATM_STOP_CHAN</code> and may end at different times; the song ends when the last one stops. For fades use <code>ATM_VOL</code> steps per section or <code>ATM_SL_VOL</code>.</p>
+        </section>
+
+        <section id="guide" class="content-section">
+<h1>Songwriting guide</h1>
+<p><strong>Audience:</strong> a person or an AI starting from zero. Every statement here was checked against the ATMlib source (<code>ATMcmds.h</code>, <code>ATMlibimpl.h</code>) and against songs that were tested on hardware (Italo Night, Escaper Droid, Midnight Run, Quest Theme, Star Light). Where something is an empirical finding rather than source code, it says so.</p>
+<p><strong>How to use this part:</strong> give an AI assistant this README plus the <code>ATMlib</code> folder, and say what you want (style, key, length, byte budget, loop or one-shot). It should read sections 0, 4, 6 and 9 first.</p>
+<p><strong>Loops:</strong> all loops use the <em>self-loop</em> method of section 6 (no <code>ATM_STOP_CHAN</code>, no <code>ATM_GOTO_ADV</code>). The older <code>STOP</code> + <code>GOTO_ADV</code> loop leaves one silent tick at the seam, audible as a "hop"; the self-loop fixed it (confirmed by ear). <code>extras/tools/convert.py</code> converts old songs.</p>
+<h2>0. Start here</h2>
+<h3>0.1 House rules for songs in this project (always apply)</h3>
+<ol>
+<li><strong>Double the tempo.</strong> Wherever an emulator or offline analysis says <code>17</code>, write <code>ATM_SET_TEMPO(34)</code>. On the real Arduboy the song plays at about <em>tempo-value</em> ticks per second (see 5.1). Quest Theme uses 34.</li>
+<li><strong>Deliver only the song <code>.h</code>.</strong> No WAV file unless asked.</li>
+<li><strong>Write songs as commands</strong>, e.g. <code>ATM_NOTE_A4, ATM_DELAY(8), ATM_VOL(38)</code>. Never write track bodies as raw hex. The small header (track count, track addresses, channel entry tracks) is hex, exactly as in the reference <code>song.h</code>.</li>
+<li><strong>Byte budget means the whole array</strong>, including the header. "Max 250 bytes" = <code>sizeof(song) &lt;= 250</code>.</li>
+<li><strong>Loops must be hop-free.</strong> A <code>STOP</code> + <code>GOTO_ADV</code> restart silences all four channels for one tick (about 30 ms) at every loop, and it is clearly audible. Make every loop a <em>self-loop</em>: each channel's entry track ends with <code>ATM_GOTO(&lt;itself&gt;)</code> and every channel sums to exactly <code>L</code> ticks. See section 6.</li>
+<li><strong>Tempo belongs to the sketch when the author says so.</strong> If the sketch sets it from the sketch (<code>ATM.setTempo()</code>), leave <code>ATM_SET_TEMPO</code> out of the song (<code>quest.h</code> has none now: without it the song plays at ATMlib's default of 25, not 34).</li>
+<li><strong>Quality bar:</strong> Italo Night, Midnight Run and Quest Theme are the reference songs; the in-game loops (section 8.7) are the reference for tiny budgets. Pixel Chase was rejected: too plain, and actually broken (section 12).</li>
+<li><strong>Game music at 60 %.</strong> Songs meant for in-game use with sound effects are written (or scaled) to about 60 % of the volume of title music, with <code>ATM_VOL(MV(n))</code> and <code>ATM_SL_VOL(MS(n))</code> (see <em>Sound effects</em>). Title music stays at 100 %.</li>
+</ol>
+<h3>0.2 Starter prompt for a fresh session</h3>
+<div class="note">
+<p>Read <code>ATMlib/README.md</code> completely (especially the songwriting guide, sections 0 to 13), then <code>ATMlib/src/ATMcmds.h</code> and one example <code>song.h</code>. Write a new ATMlib song: <em>(style, mood, key, number of bars or length, loop or one-shot, byte budget)</em>. Follow section 0.3, verify with the simulator, compile-check the header, and deliver only the <code>.h</code> in <code>ATM_*</code> commands with the doubled tempo.</p>
+</div>
+<h3>0.3 The workflow in ten lines</h3>
+<ol>
+<li>Read <code>ATMcmds.h</code> for the real opcode values. Never guess them (section 12, mistake 1).</li>
+<li>Decide: tempo (doubled), key, number of bars, loop or one-shot, byte budget.</li>
+<li>Time grid: <strong>16 ticks = 1 beat, 64 ticks = 1 bar</strong> (used by all approved songs).</li>
+<li>Plan every channel in ticks. For a loop of <code>L</code> ticks every channel must contain exactly <code>L</code> ticks of delay, and its entry track must end with <code>ATM_GOTO(itself)</code> (section 6). No <code>STOP</code>, no <code>GOTO_ADV</code>, no trimmed last delay, no <code>_last</code> tracks.</li>
+<li>Write the song with a <strong>generator script</strong> (named tracks, automatic track numbers and offsets). <code>extras/tools/gen_quest.py</code> is a complete example.</li>
+<li>Run the <strong>simulator</strong> (<code>extras/tools/atmsim.py</code>): no channel ever stops (except an unused one at tick 0), the song never restarts, the per-tick timeline repeats exactly with period <code>L</code>, call depth is at most 7, no note out of range.</li>
+<li>Print the notes per bar and check harmony and register by eye.</li>
+<li>Emit the <code>.h</code> with <code>ATM_*</code> macros and <strong>compile it against the real <code>ATMcmds.h</code></strong>, then compare the compiled bytes with the generator's bytes (<code>extras/tools/check_header.cpp</code>).</li>
+<li>Check the byte budget.</li>
+<li>Deliver the <code>.h</code> only, with a short summary (form, channels, size).</li>
+</ol>
+<h2>1. Mental model</h2>
+<ul>
+<li>ATMlib is a 4-channel tracker-style music player for the Arduboy. Default voices: <strong>CH0 PULSE, CH1 SQUARE, CH2 SAW, CH3 NOISE</strong>. Waveforms are fixed at compile time (<code>ATMconfig.h</code>), not per song.</li>
+<li>Time is counted in <strong>ticks</strong>. Tempo sets the tick rate.</li>
+<li>A song is a set of <strong>tracks</strong> (byte sequences, like subroutines). Each channel starts at one <em>entry track</em> and runs commands one after another. Tracks can call other tracks (<code>GOTO</code> = call and return, <code>REPEAT</code> = call n+1 times).</li>
+<li>Almost everything is <strong>state that persists</strong> until you change it: volume, volume slide, transposition, arpeggio. This is the source of most bugs and most savings.</li>
+<li>A note plays until the next note or the next <code>VOL(0)</code>. A <code>DELAY</code> makes the channel wait; the sound keeps going meanwhile.</li>
+</ul>
+<h2>7. Fitting a byte budget</h2>
+<p>Costs: note 1, delay 1, <code>VOL/SL_VOL/SET_TRA/ADD_TRA/SET_TEMPO</code> 2, <code>ARP</code> 3, <code>GOTO</code> 2, <code>REPEAT</code> 3, <code>RETURN/STOP</code> 1, plus 2 per track in the table and 5 for the header.</p>
+<p>What saves bytes (in the order that mattered):</p>
+<ol>
+<li><strong>Transposition instead of copies.</strong> One 2-bar riff (30 B) plays over every chord with <code>SET_TRA</code>/<code>ADD_TRA</code> (2 B per use). The bass bar is written once in the key of A and transposed the same way.</li>
+<li><strong><code>REPEAT</code></strong> for identical bars: 3 bytes for any number of repeats.</li>
+<li><strong>Shared tracks</strong> pay off when a pattern of length <code>L &gt;= 5</code> is used at least twice.</li>
+<li><strong>Relative transposition cycles</strong>: a track of <code>[riff][ADD_TRA(5) riff][ADD_TRA(-5) riff]</code> returns to its start key, so the whole cycle can be re-played in another key by one <code>SET_TRA</code>.</li>
+<li><strong>Inline tiny things</strong> (a 4-byte track costs 6 with its table entry).</li>
+<li><strong>Drums</strong>: one 24-tick core shared by every half-bar, called with <code>REPEAT(30, ...)</code>.</li>
+<li>Chords as explicit long notes with an arp: <code>NOTE, DELAY(64), NOTE, DELAY(64)</code> is 4 bytes per two bars.</li>
+</ol>
+<p>Quest Theme budget (233 bytes, self-loop): header 29 B, drums 39 (entry + core + half), lead 68, chords 41, bass 56. (The old STOP + <code>GOTO_ADV</code> version was 247 B: it needed the 5-byte <code>GOTO_ADV</code>, a trimmed <code>bass_bar_last</code> track and <code>STOP</code>s.)</p>
+<h2>8. Composition recipes that worked</h2>
+<h3>8.1 Drums (CH3 NOISE), copied from Italo Night</h3>
+<p>16-tick beats, all with <code>VOL</code> + <code>SL_VOL</code> + <code>DELAY</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Sound</th>
+<th>Commands</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kick click</td>
+<td><code>VOL(48) SL_VOL(-12) DELAY(4)</code> (Italo: <code>VOL(28) SL_VOL(-14)</code>)</td>
+</tr>
+<tr>
+<td>closed hat</td>
+<td><code>VOL(14) SL_VOL(-7) DELAY(4)</code> (Italo: <code>VOL(12) SL_VOL(-6)</code>)</td>
+</tr>
+<tr>
+<td>open hat</td>
+<td><code>VOL(26) SL_VOL(-3) DELAY(8)</code></td>
+</tr>
+<tr>
+<td>snare / clap</td>
+<td><code>VOL(44) SL_VOL(-5) DELAY(8)</code> (Italo: <code>VOL(40)</code>)</td>
+</tr>
+<tr>
+<td>snare roll (8 steps of 2 ticks)</td>
+<td><code>VOL(22..50 in steps of 4) SL_VOL(-9) DELAY(2)</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Beat A (beats 1, 3) = kick(4) + closed hat(4) + open hat(8). Beat B (beats 2, 4) = snare(8) + open hat(8). Fills: replace beat 4 of bar 4 and bar 8 with the roll.</p>
+<h3>8.2 Kick on a tonal channel (Italo Night CH1)</h3>
+<p><code>ATM_ARP_OFF, ATM_SL_FRQ((uint8_t)-127), ATM_VOL(30), ATM_NOTE_D3_, ATM_DELAY(4), ATM_VOL(0), ATM_DELAY(4)</code>. Needs <code>ARP_OFF</code> first. Use when a channel is free of arpeggios.</p>
+<h3>8.3 Bass (CH2 SAW)</h3>
+<p><code>VOL(63), SL_VOL(-5)</code>; one beat track, <code>bar = REPEAT(2, beat) + beat4</code>, with a variation on beat 4 (root, root, octave); the whole bar is written once in the key of A and transposed per chord.
+* Italo Night beat (16 ticks): <code>VOL(0) DELAY(4)</code> (duck under the kick), <code>VOL(63)</code>, root(4), octave(4), root(4).
+* Quest Theme beat (16 ticks): root(8), octave(8); beat 4: root(8), root(4), octave(4).</p>
+<h3>8.4 Lead (CH0 PULSE)</h3>
+<p><code>VOL(38), SL_VOL(-2)</code>: every note starts loud and decays. Write a 1- or 2-bar riff and transpose it per chord.
+<strong>Which riffs survive transposition:</strong> use the <em>pentatonic</em> notes of the chord.
+* Minor key, chords i, iv, v (root offsets 0, +5, +7): minor pentatonic degrees 0, 3, 5, 7, 10 stay inside the key on all three chords. Avoid the 2nd degree on the v chord.
+* Major key, chords I, IV, V: major pentatonic degrees 0, 2, 4, 7, 9.
+* A riff containing the third only transposes cleanly between chords of the same quality. Otherwise leave the third out or write explicit notes.</p>
+<h3>8.5 Arpeggio chords (CH1 SQUARE)</h3>
+<ul>
+<li>Stabs (Italo Night): <code>SL_VOL(-3), VOL(24), ARP(0x34, 0x20), NOTE, DELAY(8)</code> once per beat, after the kick.</li>
+<li>Held chords (Quest Theme): <code>VOL(30), SL_VOL(-1), ARP(0x34, 0x20)</code>, then <code>NOTE root, DELAY(64)</code> once per bar; the arpeggio shimmers and fades, then re-articulates on the bar.</li>
+<li>Root notes explicit (no transposition on this channel, see 4.6).</li>
+</ul>
+<h3>8.6 Form</h3>
+<ul>
+<li>8 bars (Italo Night, Escaper Droid): one pass of the chord progression, ~15 s at tempo 17/34.</li>
+<li>16 bars (Quest Theme): the same 8-bar cycle twice, second time lifted a whole step with one <code>SET_TRA(2)</code>, ending on a pivot chord (Em: chord iv of Bm and chord v of Am) so the loop returns smoothly.</li>
+<li>Chord progressions used: Am | F | C | G | Am | F | G | E (Italo Night; bass transposition offsets from A: 0, -4, +3, -2, 0, -4, -2, -5), D | G | A | D | D | Bm | A | D (Escaper Droid; offsets from D: 0, +5, +7, 0, 0, +9, +7, 0), Am Am Dm Dm Am Am Em Em then +2 (Quest Theme).</li>
+</ul>
+<h3>8.7 Tiny in-game loops (50 to 100 bytes)</h3>
+<p><strong>The 30-song sketch.</strong> All small in-game loops now live in ONE sketch, <code>examples/loops/inGameSongs</code> (<code>song.h</code> holds a <code>PROGMEM</code> pointer array, the A button switches song, the screen shows the name and its byte size, B pauses). Songs 1-5 are the five below, 6-10 chiptune, 11-15 Sega, 16-20 NES, 21-25 C64, 26-30 Game Boy style, each 50 to 100 bytes (list in section 13). Remember that Arduino keeps a stale <code>build</code> folder: if the IDE still shows 25 songs after an update, clean the build.</p>
+<p><strong>Volume.</strong> These loops are written at full volume. If the game also plays sound effects, scale them to about 60 % (see <em>Sound effects</em>, "Keep the music quieter than the effects").</p>
+<p>The five songs in <code>ingame5.h</code> (Meadow Waltz 94 B, Lantern Lake 73 B, Sunday Market 89 B, Pixel Breeze 87 B, Music Box Tide 87 B) were written to show how little a pleasant, smooth, looping background track needs. What they share:</p>
+<ul>
+<li><strong>No drums unless the groove needs them</strong> (Lantern Lake, Meadow Waltz, Pixel Breeze, Music Box Tide have none; Sunday Market uses one 16-tick brush track with <code>REPEAT</code>). Harmony and a good bass do the work.</li>
+<li><strong>Self-loop on every channel</strong> (section 6): the entry track is the whole part and ends with <code>ATM_GOTO(itself)</code>. With only 3 or 4 tracks the header is 11 to 15 bytes.</li>
+<li><strong>Unused channels</strong> point at a 1-byte <code>ATM_STOP_CHAN</code> track.</li>
+<li><strong>One long note per bar + an arpeggio</strong> is the cheapest chord: <code>ATM_ARP(0x34, 0x23)</code> once, then <code>NOTE, DELAY(64)</code> per bar = 3 bytes per bar. Slow arps (<code>0x23</code>: 4 ticks per step) sound dreamy; fast ones (<code>0x20</code>) sound like stabs.</li>
+<li><strong>Soft decay</strong> instead of drums for rhythm: <code>ATM_VOL(30), ATM_SL_VOL(-1)</code> makes every note a bell.</li>
+<li><strong>One riff, many chords:</strong> Pixel Breeze plays one 6-note pentatonic riff over <code>C G F C</code> with one cycle track moved by <code>ATM_ADD_TRA</code>; the bass calls the same track from <code>ATM_SET_TRA(-24)</code>.</li>
+<li><strong>Rhythmic tricks that cost nothing:</strong> 3-3-2 bossa grid (24+24+16 ticks); 5 against 3 phasing (a 5-note pattern of 8-tick notes against a 3-note arp at 8 ticks per step realigns every 120 ticks, exactly at the chord change, Music Box Tide).</li>
+<li><strong>Waltz</strong> = 36 ticks per bar (3 beats of 12), loop 288 = 8 bars.</li>
+<li><strong>Tempo is the hardware value</strong> here (20 to 32); <code>ATM_SET_TEMPO</code> costs 2 bytes, leave it out if the sketch calls <code>ATM.setTempo()</code>.</li>
+</ul>
+<p>Complete example, Lantern Lake (73 bytes, D minor, tempo 20, loop 256 ticks = 12.8 s). Each channel is one self-looping track:</p>
+<pre><code class="language-cpp">Song lanternLake[] = {          // total song in bytes = 73
+  0x04,                         // Number of tracks
+  0x00, 0x00,                   // Address of track 0   //0
+  0x18, 0x00,                   // Address of track 1   //24
+  0x2D, 0x00,                   // Address of track 2   //45
+  0x3B, 0x00,                   // Address of track 3   //59
+
+  0x00,                         // Channel 0 entry track (bells)
+  0x01,                         // Channel 1 entry track (pad)
+  0x02,                         // Channel 2 entry track (bass)
+  0x03,                         // Channel 3 entry track (silent)
+
+  //&quot;Track 0&quot; bells  [24 bytes] - two bell strikes per bar, one per half bar
+  ATM_SET_TEMPO(20),
+  ATM_VOL(30),
+  ATM_SL_VOL((uint8_t)-1),
+  ATM_NOTE_A5, ATM_DELAY(32),
+  ATM_NOTE_F5, ATM_DELAY(32),
+  ATM_NOTE_D6, ATM_DELAY(32),
+  ATM_NOTE_A5_, ATM_DELAY(32),
+  ATM_NOTE_A5, ATM_DELAY(32),
+  ATM_NOTE_C6, ATM_DELAY(32),
+  ATM_NOTE_G5, ATM_DELAY(32),
+  ATM_NOTE_E5, ATM_DELAY(32),
+  ATM_GOTO(0),            // loop: this very track
+
+  //&quot;Track 1&quot; pad  [21 bytes] - slow arpeggio chords: Dm | Bb | F | C
+  ATM_VOL(26),
+  ATM_TREM(1, 7),
+  ATM_ARP(0x34, 0x23),
+  ATM_NOTE_D4, ATM_DELAY(64),
+  ATM_ARP(0x43, 0x23),
+  ATM_NOTE_A3_, ATM_DELAY(64),
+  ATM_NOTE_F4, ATM_DELAY(64),
+  ATM_NOTE_C4, ATM_DELAY(64),
+  ATM_GOTO(1),
+
+  //&quot;Track 2&quot; bass  [14 bytes] - one soft root per bar
+  ATM_VOL(30),
+  ATM_SL_VOL((uint8_t)-1),
+  ATM_NOTE_D3, ATM_DELAY(64),
+  ATM_NOTE_A2_, ATM_DELAY(64),
+  ATM_NOTE_F3, ATM_DELAY(64),
+  ATM_NOTE_C3, ATM_DELAY(64),
+  ATM_GOTO(2),
+
+  //&quot;Track 3&quot; silent  [1 byte] - unused channel stops at once
+  ATM_STOP_CHAN,
+};
+</code></pre>
+<p>All three musical channels sum to exactly 256 ticks (8 x 32, 4 x 64, 4 x 64). The pad's arpeggio is set before the first note and its two chord qualities are set before their notes (minor <code>0x34</code>, major <code>0x43</code>); the second pass starts with the arpeggio still on <code>0x43</code> from the last bar, but <code>ATM_ARP(0x34, 0x23)</code> at the top of the track resets it before the first note, so every pass is identical. A WAV preview of all five songs was made with a small offline synth (pulse 25 %, square, saw, noise; tick rate = tempo), not with ATMlib itself.</p>
+<h2>9. Tooling</h2>
+<p>All scripts live in <code>extras/tools/</code> (Python 3, plus <code>g++</code> for the byte check). Run them from that folder, with <code>ATM_SRC</code> pointing at <code>ATMlib/src</code>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>atmsim.py</code></td>
+<td>Python model of the playroutine's control flow <strong>and</strong> per-tick state: call stack, track-0 behaviour, delays, <code>REPEAT</code> counters, transposition, volume retrigger, arpeggio, volume/frequency slides (with the missing upper clamp), tremolo, vibrato, glissando, note-cut gate (it raises if cut is used with transposition), tempo commands, cues, and the STOP / <code>GOTO_ADV</code> restart rule for old files. It does <strong>not</strong> render audio. After <code>simulate()</code>, <code>atmsim.TIMELINE[tick]</code> holds <code>(volume, frequency_hz)</code> for each of the four channels, which is how fades, the cut gate and slides are checked. It models the long delay (<code>0xE0</code>). <code>atmsim.DELAYLOG</code> (tick, channel, address of every delay executed) and <code>atmsim.STOPLOG</code> (tick, channel, address of every <code>STOP</code>) support converters and loop checks.</td>
+</tr>
+<tr>
+<td><code>gen_quest.py</code></td>
+<td>Complete generator of Quest Theme (self-loop, 233 B): command constructors, named tracks, assembler (offsets, track numbers), verifier, header-file writer. The pieces to reuse for a small song.</td>
+</tr>
+<tr>
+<td><code>gen_starlight.py</code></td>
+<td>Generator of Star Light (intro + looping body, about 90 tracks, section-table check). The pattern for a long song.</td>
+</tr>
+<tr>
+<td><code>gen_orbital.py</code>, <code>render_orbital.py</code></td>
+<td>Generator and <code>.h</code> writer of Orbital Rush (3 minutes, 1479 B), same structure as Star Light.</td>
+</tr>
+<tr>
+<td><code>gen_cutlass.py</code></td>
+<td>Showcase song that uses nearly every effect: fades, cues, tempo changes, glissando, tremolo.</td>
+</tr>
+<tr>
+<td><code>convert.py</code></td>
+<td>Converts an old <code>STOP</code> + <code>GOTO_ADV</code> loop to the hop-free self-loop and verifies the result (section 6).</td>
+</tr>
+<tr>
+<td><code>check_header.cpp</code></td>
+<td>Compiles a song header against the real <code>ATMcmds.h</code> and compares the bytes with the generator's bytes.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Verification checklist (all must pass)</strong></p>
+<ul>
+<li>[ ] <code>sizeof(song)</code> within the byte budget</li>
+<li>[ ] <strong>loops:</strong> <code>restarts == []</code> and no <code>STOP</code> after tick 0 (unused channels excepted); no <code>ATM_GOTO_ADV</code></li>
+<li>[ ] <strong>loops:</strong> every channel's entry track ends with <code>ATM_GOTO(itself)</code>, and every channel sums to exactly <code>L</code> ticks</li>
+<li>[ ] <strong>loops:</strong> <code>TIMELINE[t] == TIMELINE[t-L]</code> for all <code>t &gt;= L</code> (volume, and frequency while audible)</li>
+<li>[ ] loops 1, 2, 3 have identical note events</li>
+<li>[ ] max call depth &lt;= 7</li>
+<li>[ ] no track calls track 0</li>
+<li>[ ] every <code>note + transposition</code> is within 1..63</li>
+<li>[ ] compiled header bytes == generator bytes (<code>extras/tools/check_header.cpp</code>)</li>
+<li>[ ] tempo is the doubled value (in-game songs: the stated hardware value)</li>
+<li>[ ] one-shots only: every channel ends with <code>STOP</code>, no <code>GOTO_ADV</code></li>
+</ul>
+<h2>10. Output file template</h2>
+<pre><code class="language-cpp">#ifndef SONG_H
+#define SONG_H
+
+// ---------------------------------------------------------------------------
+//  &quot;Title&quot; - style, key, bars, bytes
+//  Play with:   #include &quot;quest.h&quot;      ATM.play(questTheme);
+//  Timing : ATM_SET_TEMPO(34) (doubled). 1 beat = 16 ticks, 1 bar = 64 ticks ...
+//  Form / channels. Loop: every entry track ends with ATM_GOTO(itself), no STOP, no hop.
+// ---------------------------------------------------------------------------
+
+#include &lt;ATMcmds.h&gt;
+
+#ifndef Song
+#define Song const uint8_t PROGMEM
+#endif
+
+Song questTheme[] = {     // total song bytes = 233
+  0x0C,                       // Number of tracks
+  0x00, 0x00,                 // Address of track 0   0   drums
+  ...                         // one line per track
+  0x03,                       // CH0 entry -&gt; track 3 (lead)
+  0x06,                       // CH1 entry
+  0x07,                       // CH2 entry
+  0x00,                       // CH3 entry
+  //&quot;Track 0&quot; drums  [10b]
+  ATM_SET_TEMPO(34),
+  ATM_REPEAT(30, 2),   // 31x drum_half
+  ATM_GOTO(1),   // -&gt; drum_core
+  ATM_DELAY(8),
+  ATM_GOTO(0),   // loop: this very track
+  ...
+};
+
+#endif
+</code></pre>
+<p><code>extras/tools/gen_quest.py</code> writes exactly this.</p>
+<h2>11. Using a song in a sketch</h2>
+<p>See <em>Quick start</em> and <em>API</em> at the top of this file. In short: <code>#include "song.h"</code>, create <code>ATMsynth ATM;</code>, call <code>ATM.play(&lt;array name&gt;)</code> in <code>setup()</code>.</p>
+<p><strong>Folder layout (current):</strong> <code>ATMlib/examples/loops/&lt;name&gt;/</code> for songs that loop forever (Italo Night, Escaper Droid, Neon Heart, Quest Theme, Star Light, inGameSongs), <code>ATMlib/examples/songs/&lt;name&gt;/</code> for one-shots and long songs (Cutlass Cove, Midnight Run, Orbital Rush), <code>ATMlib/examples/soundEffects/</code> for effects (<code>sfxDemo</code>: 45 poke + 45 <code>playSfx</code> effects and 5 songs). Each song is an Arduino sketch folder with <code>&lt;name&gt;.ino</code>, <code>song.h</code>, <code>ATMconfig.h</code>, <code>bitmaps.h</code>: duplicate an existing folder, rename the folder and the <code>.ino</code> (the Arduino IDE wants both to match), put the data in <code>song.h</code> and change <code>ATM.play(&lt;name&gt;)</code>.</p>
+<p><strong>Several songs in one sketch:</strong> keep the song arrays in <code>PROGMEM</code> pointer arrays (see <code>examples/loops/inGameSongs</code>).</p>
+<h2>12. Mistakes made on this project (do not repeat)</h2>
+<ol>
+<li><strong>Invented opcodes.</strong> A first Pixel Chase draft used guessed byte values (<code>0xC0</code> for volume ...). They collide with the delay range <code>0xA0..0xDF</code>. Always take values from <code>ATMcmds.h</code>.</li>
+<li><strong>Track 0 called</strong> (section 4.3). Looks fine in a tick counter, sounds like a stuck melody on hardware. A simulator that models the call stack catches it.</li>
+<li><strong><code>REPEAT(n)</code> is n+1 runs.</strong> <code>REPEAT(7, beat)</code> made a 128-tick bar instead of 64.</li>
+<li><strong><code>GOTO_ADV</code> in a one-shot song</strong> makes it restart. (Looping songs must not use it either, see mistake 11.)</li>
+<li><strong>Off-by-one loops:</strong> with the self-loop every channel must sum to exactly <code>L</code>; one channel off by a tick drifts against the others. (The old rule was <code>L-1</code>; do not mix the two.)</li>
+<li><strong>Tempo not doubled.</strong></li>
+<li><strong>Invalid names/arguments:</strong> <code>ATM_NOTE_F#5</code>, <code>ATM_NOTE_OFF</code>, negative arguments without <code>(uint8_t)</code>.</li>
+<li><strong>Plain, short, hex-looking songs</strong> are not accepted. Use the Italo Night structure: real melody, kick/hat/snare with fills, transposed bass, chord stabs, a form with a destination.</li>
+<li><strong>Combining <code>ATM_ARP</code> with transposition on one channel</strong> (detunes the arpeggio).</li>
+<li><strong>Trusting a counter instead of a model.</strong> Verify with the simulator and by compiling.</li>
+<li><strong>Looping with <code>STOP</code> + <code>GOTO_ADV</code>.</strong> Every loop has one tick in which all four channels are silent (<code>STOP</code> sets volume 0, the restart tick plays nothing). The period was exact and the simulator's "all stops on tick <code>L-1</code>" check passed, yet a "hop" was audible in every song. The model has to check <em>what is audible</em> (the per-tick timeline), not only when events happen. Fixed by the self-loop (section 6).</li>
+<li><strong>Believing "gapless on paper".</strong> The first attempt at a gapless version (trimming one tick and keeping <code>STOP</code>) was wrong for the same reason; only removing <code>STOP</code> from the loop removes the seam.</li>
+</ol>
+        </section>
+
+        <section id="catalog" class="content-section">
+<h1>Song catalog</h1>
+<h2>13. Catalog of the existing songs</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Folder (in <code>examples/</code>)</th>
+<th>Array</th>
+<th>Style</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>loops/ItaloDisco</code></td>
+<td><code>italoNight</code></td>
+<td>Italo disco, A minor, 8 bars</td>
+<td>469 B</td>
+<td>Written at emulator tempo 17 (now <code>SET_TEMPO(35)</code> in the file; use the doubled value). Kick + arp stabs on CH1, transposed SAW bass, noise drums with fills. Chords Am F C G Am F G E. <strong>Self-loop</strong> (was 558 B with STOP + <code>GOTO_ADV</code>).</td>
+</tr>
+<tr>
+<td><code>loops/escaperDroid</code></td>
+<td><code>escaperDroid</code></td>
+<td>uptempo space, D major, 8 bars</td>
+<td>455 B</td>
+<td>Same skeleton as Italo Night. ARP <code>0x47</code> / <code>0x37</code>. <code>ATM_CUE(1)</code> once per beat (inside the kick track, 2 bytes) for the game's dancing droid sprite. Self-loop (was 544 B).</td>
+</tr>
+<tr>
+<td><code>loops/neonHeart</code></td>
+<td><code>neonHeart</code></td>
+<td>Italo disco, E minor, 8 bars</td>
+<td>476 B</td>
+<td>Tempo 36. Italo Night skeleton with new key, melody and chords: Em C G D Em C D B (dominant pulls back to Em). Chord stabs use inversions (Em, C/E, G/D, D/F#, B/D#). Self-loop (was 565 B).</td>
+</tr>
+<tr>
+<td><code>songs/midnightRun</code></td>
+<td><code>midnightRun</code></td>
+<td>80s synthwave, A minor, 96 bars (~3 min)</td>
+<td>715 B</td>
+<td>One-shot, fade in and out, no <code>GOTO_ADV</code>.</td>
+</tr>
+<tr>
+<td><code>loops/questTheme</code></td>
+<td><code>questTheme</code></td>
+<td>in-game chiptune, A minor, 16 bars</td>
+<td>233 B</td>
+<td>Tempo 34 inside the song (remove <code>ATM_SET_TEMPO</code> if the sketch sets it). Arpeggio chords, transposed lead and bass, key lift and Em pivot, <strong>self-loop</strong> (was 247 B). Best reference for tight budgets. Generator: <code>extras/tools/gen_quest.py</code>.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>meadowWaltz</code></td>
+<td>folk waltz in 3/4, C major, 8 bars of 36 ticks</td>
+<td>94 B</td>
+<td>Tempo 26, loop 288 ticks. Melody written out, oom-pah-pah bass. Self-loop. See 8.7.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>lanternLake</code></td>
+<td>ambient / dreamy, D minor, 4 bars</td>
+<td>73 B</td>
+<td>Tempo 20, loop 256 ticks. Bells, slow arpeggio pad with tremolo, long bass roots. Listed in full in 8.7.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>sundayMarket</code></td>
+<td>bossa-nova lounge, A dorian, 4 bars</td>
+<td>89 B</td>
+<td>Tempo 32, loop 256 ticks. Minor-7 arp stabs (<code>0x37</code>), 3-3-2 bass, brush noise with <code>REPEAT</code>.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>pixelBreeze</code></td>
+<td>light chiptune, C major pentatonic, 4 bars</td>
+<td>87 B</td>
+<td>Tempo 30, loop 256 ticks. One riff moved by <code>ADD_TRA</code> over C G F C, bass calls the same cycle track.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>musicBoxTide</code></td>
+<td>minimal music box, phasing 5 against 3, C G F</td>
+<td>87 B</td>
+<td>Tempo 30, loop 360 ticks. 5-note pattern against a 3-note arp, realigns at each chord change.</td>
+</tr>
+<tr>
+<td><em>(not in this tree)</em></td>
+<td><code>gameOver</code></td>
+<td>one-shot game over jingle, A minor, 5 bars</td>
+<td>106 B</td>
+<td>Tempo 20. Andalusian descent Am-G-F-E-Am, one lead phrase transposed down with ADD_TRA, arp chords, bass on the same transposition, noise toll per bar. No GOTO_ADV, so it ends by itself. Reference for small one-shots (a game's own <code>youDied</code> does the same in 64 B).</td>
+</tr>
+<tr>
+<td><code>songs/cutlassCove</code></td>
+<td><code>cutlassCove</code></td>
+<td>original tropical-pirate showcase, C major / A minor, 32 bars (~75 s)</td>
+<td>839 B</td>
+<td>One-shot, tempo 30 (+6 in B, ritardando in the outro), fades, cues 1..6. Uses nearly every command; generator <code>extras/tools/gen_cutlass.py</code>. An original piece, not a copy of any existing song.</td>
+</tr>
+<tr>
+<td><code>loops/starLight</code></td>
+<td><code>starLight</code></td>
+<td>original K-pop style dance track, C major, 3:00, intro + 84-bar body that loops forever</td>
+<td>1307 B</td>
+<td>Tempo 33 (~124 BPM). Verse / pre-chorus / chorus / dance break / bridge / key-lifted last chorus (+2). Hook, pre motif and dance riff are one track each, transposed per chord. <strong>Self-loop with intro</strong> (was 1454 B). Generator: <code>extras/tools/gen_starlight.py</code>.</td>
+</tr>
+<tr>
+<td><code>songs/orbitalRush</code></td>
+<td><code>orbitalRush</code></td>
+<td>original demoscene style (Purple Motion / Jonne Valtonen flavour, nothing copied), D minor, 3:00 first pass, intro + 96-bar body that loops forever</td>
+<td>1479 B</td>
+<td>Tempo 37 (~139 BPM). A / B / vibrato break with glissando riser / chorus / dance riff / chorus lifted +2 (Em C Am B) / tag back into A. Bass is one 16th-note bar transposed per chord. <strong>Self-loop with intro.</strong> Generator pattern = <code>extras/tools/gen_starlight.py</code>.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>coinRush</code></td>
+<td>Chiptune style: bouncy arcade chiptune, C major</td>
+<td>88 B</td>
+<td>Tempo 36, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>bitBounce</code></td>
+<td>Chiptune style: syncopated chiptune, G major</td>
+<td>94 B</td>
+<td>Tempo 34, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>starlitRun</code></td>
+<td>Chiptune style: driving minor chiptune, A minor</td>
+<td>91 B</td>
+<td>Tempo 38, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>caveCrawl</code></td>
+<td>Chiptune style: slow dark chiptune, D minor</td>
+<td>76 B</td>
+<td>Tempo 24, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>victoryLap</code></td>
+<td>Chiptune style: march-like fanfare chiptune, F major</td>
+<td>81 B</td>
+<td>Tempo 40, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>turboStreet</code></td>
+<td>Sega style: funky Mega Drive slap bass, E minor</td>
+<td>93 B</td>
+<td>Tempo 36, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>sunsetStrip</code></td>
+<td>Sega style: smooth jazz-pop with vibrato lead, D major</td>
+<td>95 B</td>
+<td>Tempo 30, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>chromeRider</code></td>
+<td>Sega style: driving night-ride rock, B minor</td>
+<td>85 B</td>
+<td>Tempo 40, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>marbleRuins</code></td>
+<td>Sega style: mysterious arpeggios, C minor</td>
+<td>95 B</td>
+<td>Tempo 28, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>velvetLounge</code></td>
+<td>Sega style: swung late-night lounge, F major</td>
+<td>99 B</td>
+<td>Tempo 32, loop 384 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>castleGate</code></td>
+<td>NES style: dramatic minor with pumping bass, E minor</td>
+<td>98 B</td>
+<td>Tempo 38, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>dungeonDash</code></td>
+<td>NES style: fast minor run, A minor</td>
+<td>90 B</td>
+<td>Tempo 44, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>overworldMorning</code></td>
+<td>NES style: bright marching adventure, C major</td>
+<td>91 B</td>
+<td>Tempo 40, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>fortressRun</code></td>
+<td>NES style: tense staccato chase, D minor</td>
+<td>86 B</td>
+<td>Tempo 42, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>pixelParade</code></td>
+<td>NES style: cheerful 3/4 stroll, G major</td>
+<td>97 B</td>
+<td>Tempo 28, loop 192 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>breadbinBeat</code></td>
+<td>C64 style: fast arpeggio chords + gallop bass, A minor</td>
+<td>88 B</td>
+<td>Tempo 38, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>sidSunrise</code></td>
+<td>C64 style: bright rolling arpeggios, D major</td>
+<td>98 B</td>
+<td>Tempo 36, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>loaderLullaby</code></td>
+<td>C64 style: slow 3/4 lullaby, G minor</td>
+<td>90 B</td>
+<td>Tempo 22, loop 288 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>rasterRain</code></td>
+<td>C64 style: fast 16th lead + steady kick, E minor</td>
+<td>91 B</td>
+<td>Tempo 40, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>joystickJam</code></td>
+<td>C64 style: funky minor groove, C minor</td>
+<td>92 B</td>
+<td>Tempo 36, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>pocketQuest</code></td>
+<td>Game Boy style: bright handheld adventure, C major</td>
+<td>84 B</td>
+<td>Tempo 38, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>handheldHero</code></td>
+<td>Game Boy style: perky marching pulses, G major</td>
+<td>91 B</td>
+<td>Tempo 42, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>linkCable</code></td>
+<td>Game Boy style: playful 3/4 bounce, A minor</td>
+<td>99 B</td>
+<td>Tempo 30, loop 192 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>brickLogic</code></td>
+<td>Game Boy style: thoughtful staccato puzzle loop, D minor</td>
+<td>86 B</td>
+<td>Tempo 34, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>loops/inGameSongs</code></td>
+<td><code>dmgDawn</code></td>
+<td>Game Boy style: sleepy menu music, F major</td>
+<td>78 B</td>
+<td>Tempo 24, loop 256 ticks. Self-loop, one track per channel.</td>
+</tr>
+<tr>
+<td><code>soundEffects/sfxDemo</code></td>
+<td><code>pipeDream</code></td>
+<td>NES style: pulse arpeggio hops over an octave-bouncing bass, C major (C Am F G)</td>
+<td>104 B</td>
+<td>Tempo 42, loop 256 ticks, 60 % volume (<code>MV</code> / <code>MS</code>). Self-loop.</td>
+</tr>
+<tr>
+<td><code>soundEffects/sfxDemo</code></td>
+<td><code>canyonRaid</code></td>
+<td>Atari 2600 style: wavering low square lead, saw pump bass, noise thump, A minor (Am G F E)</td>
+<td>102 B</td>
+<td>Tempo 36, loop 256 ticks, 60 % volume. Lead on CH1, CH0 silent.</td>
+</tr>
+<tr>
+<td><code>soundEffects/sfxDemo</code></td>
+<td><code>greenZone</code></td>
+<td>Sega style: bright pulse lead, syncopated bass, hat-heavy beat, C major (C Bb F G)</td>
+<td>106 B</td>
+<td>Tempo 44, loop 256 ticks, 60 % volume.</td>
+</tr>
+<tr>
+<td><code>soundEffects/sfxDemo</code></td>
+<td><code>neonHighway</code></td>
+<td>Sega style: arpeggio lead, answering melody, driving 16th bass, D minor (Dm Bb F C)</td>
+<td>108 B</td>
+<td>Tempo 44, loop 256 ticks, 60 % volume. All four channels used.</td>
+</tr>
+<tr>
+<td><em>(removed)</em></td>
+<td><code>pixelChase</code></td>
+<td>NES-like</td>
+<td>181 B</td>
+<td><strong>Broken (track-0 bug), rejected. Do not use.</strong></td>
+</tr>
+</tbody>
+</table></div>
+        </section>
+
+        <section id="tracker" class="content-section">
+<h1>ATM Tracker Editor</h1>
+<h2>Tracker editor</h2>
+<p>A single-file HTML tracker for this library (<code>atm-tracker-editor.html</code>; the project lives in the <code>trackerEditor</code> repository). Open it in a browser. Current release: <strong>0.1.7</strong>.</p>
+<p><strong>Modes.</strong> You always start in <strong>SONG</strong>; switch with the header buttons.</p>
+<ul>
+<li><strong>SONG:</strong> four channel lanes. Patterns appear as blocks (width = tick length); unique patterns have unique colours, copies share one. Drag a pattern from the left list onto a lane to append it. Blocks pack left with no gaps; delete one (x) and the rest slide left. Click a block to enter PATTERN mode for that clip.</li>
+<li><strong>PATTERN:</strong> one lane. <strong>Record</strong> writes notes and advances the cursor (hold a key to grow the tick length). <strong>Edit</strong> writes and plays notes but keeps the cursor (move it with Left / Right). Drag a note to move it (its length comes along; if the landing gap is shorter the note is clipped); drag the right edge to change its length.</li>
+<li><strong>SOUNDFX:</strong> one pattern, one voice, no arrangement blocks. Choose <strong>Play as CH0 to CH3</strong> in the header (pulse / square / tone / noise). Export is <code>ATM_SFX_TRACK</code> for <code>ATM.playSfx(sfxTrack, ch)</code>. Switching between SONG and SFX asks for confirmation and starts from scratch.</li>
+</ul>
+<p><strong>Load</strong> accepts JSON and <code>song.h</code> files written with ATM commands. Macros such as <code>ATM_NOTE_A5_</code>, <code>ATM_SET_TRA(-5)</code>, <code>ATM_SL_VOL(-4)</code> are expanded. With several arrays in one file, the first valid score header is imported as four channel patterns on the song timeline. Very nested <code>GOTO</code> / <code>REPEAT</code> songs are flattened onto a 64-tick grid per channel so you can edit them.</p>
+<p><strong>Export</strong> as <strong>commands</strong> or <strong>hex</strong>: a SONG becomes <code>const uint8_t score[] PROGMEM</code> for <code>ATM.play(score)</code>, an SFX becomes <code>ATM_SFX_TRACK</code>. Rests and holds become <code>ATM_DELAY</code>; the arrangement becomes <code>ATM_GOTO</code> chains of pattern tracks.</p>
+<p><strong>Playback</strong> in the editor is Web Audio, not cycle-accurate to the AVR interrupt routine. For a device-faithful listen, compile a hex and run it in an emulator such as Ardens, or on hardware.</p>
+<p><strong>Keyboard:</strong> Space = play / stop; Left / Right = cursor in Pattern / Edit; Up / Down = piano octave; Del = clear the selected note; A-L + sharps / Z-M and Q-U = piano. Web MIDI is supported, and a computer-keyboard piano sits under the grid.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1.7</td>
+<td>Note move / resize uses the grid (right-edge lengthen works). Sidebars scroll so they no longer overlap the piano.</td>
+</tr>
+<tr>
+<td>0.1.6</td>
+<td>SONG blocks, PATTERN one-lane drag and resize, Record vs Edit, SFX one channel. Load ATM command <code>song.h</code>. Export hex or commands.</td>
+</tr>
+<tr>
+<td>0.1.5</td>
+<td>Early SONG / SFX split.</td>
+</tr>
+<tr>
+<td>0.1.4</td>
+<td>Record-only hold length, compact delays.</td>
+</tr>
+<tr>
+<td>0.1.3</td>
+<td>Channel FX audible on Play.</td>
+</tr>
+<tr>
+<td>0.1.2</td>
+<td>Preview applies SET VOLUME + SLIDE VOLUME per tick; hold notes; piano under grid; channel / step FX.</td>
+</tr>
+<tr>
+<td>0.1.0</td>
+<td>First HTML editor (replacing the old TEAM ARG React trackerEditor).</td>
+</tr>
+</tbody>
+</table></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://github.com/T-arg" title="GitHub">GH</a>
+                <a href="https://x.com" title="X">𝕏</a>
+            </div>
+            <p>© 2026 TEAM a.r.g. All rights reserved. ATMlib documentation page.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.nav-link').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(function (l) { l.classList.remove('active'); });
+                document.querySelectorAll('.content-section').forEach(function (s) { s.classList.remove('active'); });
+                link.classList.add('active');
+                document.getElementById(link.getAttribute('data-page')).classList.add('active');
+                window.scrollTo(0, 0);
+            });
+        });
+    </script>
+</body>
 </html>
