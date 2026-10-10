@@ -1,34 +1,41 @@
 #include "ATMlib.h"
-#define SAMPLE_RATE 18000
+#define SAMPLE_RATE 16000
 #define SOUNDPIN D3
 
 uint16_t cia, cia_count;
-//bool half;
-static bool sigmadeltaflag=0;
+static bool sigmadeltaflag = 0;
+
+
+#if ATM_FX_CUE || ATM_FUNC_CUE
+uint8_t atmCue;
+#endif
+#if ATM_FUNC_PAUSE || ATM_FUNC_RESUME || ATM_FUNC_PLAYPAUSE || ATM_FUNC_SFX
+uint8_t atmScorePaused;
+#endif
+#if ATM_FUNC_SFX
+uint8_t atmSfxMask;
+#endif
 
 void IRAM_ATTR sound_speaker_ISR()
 {
-  //half = !half;
-  //if (half) return;
-
-  osc[2].phase += osc[2].freq;       // update triangle phase
+  osc[2].phase += osc[2].freq;
   int8_t phase2 = osc[2].phase >> 8;
   if (phase2 < 0) phase2 = ~phase2;
   phase2 <<= 1;
   phase2 -= 128;
   int8_t vol = ((phase2 * int8_t(osc[2].vol)) << 1) >> 8;
 
-  osc[0].phase += osc[0].freq; // update pulse phase
+  osc[0].phase += osc[0].freq; 
   int8_t vol0 = osc[0].vol;
   if (osc[0].phase >= 0xC000) vol0 = -vol0;
   vol += vol0;
 
-  osc[1].phase += osc[1].freq; // update square phase
+  osc[1].phase += osc[1].freq; 
   int8_t vol1 = osc[1].vol;
   if (osc[1].phase & 0x8000) vol1 = -vol1;
   vol += vol1;
 
-  uint16_t freq = osc[3].freq; //noise frequency
+  uint16_t freq = osc[3].freq; 
   freq <<= 1;
   if (freq & 0x8000) freq ^= 1;
   if (freq & 0x4000) freq ^= 1;
@@ -37,7 +44,6 @@ void IRAM_ATTR sound_speaker_ISR()
   if (freq & 0x8000) vol3 = -vol3;
   vol += vol3;
 
-  //OCR4A = vol + pcm;
   sigmaDeltaWrite(0, vol + pcm);
   if (--cia_count) return;
 
@@ -46,7 +52,6 @@ void IRAM_ATTR sound_speaker_ISR()
   ATM_playroutine();
 }
 
-
 byte trackCount;
 byte tickRate;
 const word *trackList;
@@ -54,83 +59,138 @@ const byte *trackBase;
 uint8_t pcm = 128;
 
 byte ChannelActiveMute = 0b11110000;
-//                         ||||||||
-//                         |||||||└->  0  channel 0 is muted (0 = false / 1 = true)
-//                         ||||||└-->  1  channel 1 is muted (0 = false / 1 = true)
-//                         |||||└--->  2  channel 2 is muted (0 = false / 1 = true)
-//                         ||||└---->  3  channel 3 is muted (0 = false / 1 = true)
-//                         |||└----->  4  channel 0 is Active (0 = false / 1 = true)
-//                         ||└------>  5  channel 1 is Active (0 = false / 1 = true)
-//                         |└------->  6  channel 2 is Active (0 = false / 1 = true)
-//                         └-------->  7  channel 3 is Active (0 = false / 1 = true)
-
-////Imports
-//extern uint16_t cia;
-
-// Exports
 osc_t osc[4];
 
-
+// Таблица частот[cite: 9]
+#if ATM_OCTAVE_2 && ATM_OCTAVE_3 && ATM_OCTAVE_4 && ATM_OCTAVE_5 && ATM_OCTAVE_6 && ATM_OCTAVE_7
 const word noteTable[64] PROGMEM = {
+#else
+const word noteTable[] PROGMEM = {
+#endif
   0,
+#if ATM_OCTAVE_2
   262,  277,  294,  311,  330,  349,  370,  392,  415,  440,  466,  494,
+#endif
+#if ATM_OCTAVE_3
   523,  554,  587,  622,  659,  698,  740,  784,  831,  880,  932,  988,
+#endif
+#if ATM_OCTAVE_4
   1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661, 1760, 1865, 1976,
+#endif
+#if ATM_OCTAVE_5
   2093, 2217, 2349, 2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729, 3951,
+#endif
+#if ATM_OCTAVE_6
   4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902,
+#endif
+#if ATM_OCTAVE_7
   8372, 8870, 9397,
+#endif
 };
 
+#if ATM_OCTAVE_2 && ATM_OCTAVE_3 && ATM_OCTAVE_4 && ATM_OCTAVE_5 && ATM_OCTAVE_6 && ATM_OCTAVE_7
+#define ATM__FREQ(note) pgm_read_word(&noteTable[note])
+#else
+static inline uint16_t atmNoteFreq(int note) {
+  if (note < 1 || note > 63) return 0;
+  uint8_t index = 0;
+  uint8_t n = (uint8_t)note;
+#if ATM_OCTAVE_2
+  if (n <= 12) return pgm_read_word(&noteTable[n]);
+  index = 12;
+#else
+  if (n <= 12) return 0;
+#endif
+  n -= 12;
+#if ATM_OCTAVE_3
+  if (n <= 12) return pgm_read_word(&noteTable[index + n]);
+  index += 12;
+#else
+  if (n <= 12) return 0;
+#endif
+  n -= 12;
+#if ATM_OCTAVE_4
+  if (n <= 12) return pgm_read_word(&noteTable[index + n]);
+  index += 12;
+#else
+  if (n <= 12) return 0;
+#endif
+  n -= 12;
+#if ATM_OCTAVE_5
+  if (n <= 12) return pgm_read_word(&noteTable[index + n]);
+  index += 12;
+#else
+  if (n <= 12) return 0;
+#endif
+  n -= 12;
+#if ATM_OCTAVE_6
+  if (n <= 12) return pgm_read_word(&noteTable[index + n]);
+  index += 12;
+#else
+  if (n <= 12) return 0;
+#endif
+  n -= 12;
+#if ATM_OCTAVE_7
+  if (n <= 3) return pgm_read_word(&noteTable[index + n]);
+#endif
+  return 0;
+}
+#define ATM__FREQ(note) atmNoteFreq((note))
+#endif
 
 struct ch_t {
   const byte *ptr;
   byte note;
-
-  // Nesting
   word stackPointer[7];
   byte stackCounter[7];
-  byte stackTrack[7]; // note 1
+  byte stackTrack[7];
   byte stackIndex;
   byte repeatPoint;
-
-  // Looping
   word delay;
   byte counter;
   byte track;
-
-  // External FX
   word freq;
   byte vol;
 
-  // Volume & Frequency slide FX
-  signed char volFreSlide;
+#if ATM_FX_VOL_SLIDE || ATM_FX_FREQ_SLIDE
+  char volFreSlide;
   byte volFreConfig;
   byte volFreCount;
+#endif
 
-  // Arpeggio or Note Cut FX
-  byte arpNotes;       // notes: base, base+[7:4], base+[7:4]+[3:0], if FF => note cut ON
-  byte arpTiming;      // [7] = reserved, [6] = not third note ,[5] = retrigger, [4:0] = tick count
+#if ATM_FX_ARP || ATM_FX_NOTE_CUT
+  byte arpNotes;
+  byte arpTiming;
   byte arpCount;
+#endif
 
-  // Retrig FX
-  byte reConfig;       // [7:2] = , [1:0] = speed // used for the noise channel
-  byte reCount;        // also using this as a buffer for volume retrig on all channels
+#if ATM_FX_NOISE
+  byte reConfig;
+#endif
+  byte reCount;
 
-  // Transposition FX
-  signed char transConfig;
+#if ATM_FX_TRANSPOSE
+  char transConfig;
+#endif
 
-  // Tremolo or Vibrato FX
+#if ATM_FX_TREMOLO || ATM_FX_VIBRATO
   byte treviDepth;
   byte treviConfig;
   byte treviCount;
+#endif
 
-  // Glissando FX
-  signed char glisConfig;
+#if ATM_FX_GLISSANDO
+  char glisConfig;
   byte glisCount;
-
+#endif
 };
 
 ch_t channel[4];
+
+#if ATM_FUNC_SFX
+ch_t sfxV;
+uint8_t sfxOsc = 0xFF;
+#endif
 
 uint16_t read_vle(const byte **pp) {
   word q = 0;
@@ -147,39 +207,39 @@ static inline const byte *getTrackPointer(byte track) {
   return trackBase + pgm_read_word(&trackList[track]);
 }
 
-
 void ATMsynth::play(const byte *song) {
-  stop();
+  if (sigmadeltaflag) {
+    noInterrupts();
+    timer1_disable();
+    sigmadeltaflag = false;
+    sigmaDeltaDisable();
+    interrupts();
+  }
   cia_count = 1;
+  memset(channel, 0, sizeof(channel));
+  ChannelActiveMute = 0b11110000;
+  
+#if ATM_FX_CUE || ATM_FUNC_CUE
+  atmCue = 0;
+#endif
+#if ATM_FUNC_PAUSE || ATM_FUNC_RESUME || ATM_FUNC_PLAYPAUSE || ATM_FUNC_SFX
+  atmScorePaused = 0;
+#endif
+#if ATM_FUNC_SFX
+  atmSfxMask = 0;
+  sfxOsc = 0xFF;
+#endif
 
-  // Initializes ATMsynth
-  // Sets sample rate and tick rate
   tickRate = 25;
   cia = 15625 / tickRate;
-  // Sets up the ports, and the sample grinding ISR
 
-  osc[3].freq = 0x0001; // Seed LFSR
-  channel[3].freq = 0x0001; // xFX
+  osc[3].freq = 0x0001; 
+  channel[3].freq = 0x0001; 
 
- 
-//  TCCR4A = 0b01000010;    // Fast-PWM 8-bit
-//  TCCR4B = 0b00000001;    // 62500Hz
-//  OCR4C  = 0xFF;          // Resolution to 8-bit (TOP=0xFF)
-//  OCR4A  = 0x80;
-//#ifdef AB_ALTERNATE_WIRING
-//  TCCR4C = 0b01000101;
-//  OCR4D  = 0x80;
-//#endif
-
-  // Load a melody stream and start grinding samples
-  // Read track count
   trackCount = pgm_read_byte(song++);
-  // Store track list pointer
   trackList = (word*)song;
-  // Store track pointer
   trackBase = (song += (trackCount << 1)) + 4;
-  // Fetch starting points for each track
-  for (byte n = 0; n < 4; n++) {
+  for (unsigned n = 0; n < 4; n++) {
     channel[n].ptr = getTrackPointer(pgm_read_byte(song++));
   }
   
@@ -192,12 +252,10 @@ void ATMsynth::play(const byte *song) {
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
   timer1_write(80000000 / SAMPLE_RATE);
   interrupts(); 
- // TIMSK4 = 0b00000100;// enable interrupt as last
 }
 
-// Stop playing, unload melody
+#if ATM_FUNC_STOP
 void ATMsynth::stop() {
-  //TIMSK4 = 0; // Disable interrupt
   noInterrupts();
   timer1_disable();
   sigmadeltaflag = false;
@@ -205,77 +263,180 @@ void ATMsynth::stop() {
   interrupts();
   memset(channel, 0, sizeof(channel));
   ChannelActiveMute = 0b11110000;
+#if ATM_FX_CUE || ATM_FUNC_CUE
+  atmCue = 0;
+#endif
+#if ATM_FUNC_PAUSE || ATM_FUNC_RESUME || ATM_FUNC_PLAYPAUSE || ATM_FUNC_SFX
+  atmScorePaused = 0;
+#endif
+#if ATM_FUNC_SFX
+  atmSfxMask = 0;
+  sfxOsc = 0xFF;
+#endif
 }
+#endif
 
 bool ATMsynth::isPlay() {
   return(sigmadeltaflag);
-};
+}
 
-
-// Start grinding samples or Pause playback
+#if ATM_FUNC_PLAYPAUSE
 void ATMsynth::playPause() {
-  if(sigmadeltaflag == true){
+  if (atmScorePaused) resume();
+  else pause();
+}
+#endif
+
+#if ATM_FUNC_PAUSE
+void ATMsynth::pause() {
+  if (atmScorePaused) return;
+  atmScorePaused = 1;
+  for (byte n = 0; n < 4; n++) {
+#if ATM_FUNC_SFX
+    if (!(atmSfxMask & (1 << n))) osc[n].vol = 0;
+#else
+    osc[n].vol = 0;
+#endif
+  }
+  if(sigmadeltaflag == true && !atmSfxMask){
     noInterrupts();
     timer1_disable();
     sigmadeltaflag = false;
     sigmaDeltaDisable();
     interrupts();
   }
-  else{
+}
+#endif
+
+#if ATM_FUNC_RESUME
+void ATMsynth::resume() {
+  if (!atmScorePaused) return;
+  atmScorePaused = 0;
+  if(sigmadeltaflag == false){
     noInterrupts();
     timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
     sigmaDeltaEnable();
     sigmadeltaflag = true;
     interrupts();
   }
-  //TIMSK4 = TIMSK4 ^ 0b00000100; // toggle disable/enable interrupt
 }
+#endif
 
-// Toggle mute on/off on a channel, so it can be used for sound effects
-// So you have to call it before and after the sound effect
+#if ATM_FUNC_MUTE
 void ATMsynth::muteChannel(byte ch) {
-  ChannelActiveMute += (1 << ch );
+  ChannelActiveMute |= (uint8_t)(1 << ch);
 }
+#endif
 
+#if ATM_FUNC_UNMUTE
 void ATMsynth::unMuteChannel(byte ch) {
-  ChannelActiveMute &= (~(1 << ch ));
+  ChannelActiveMute &= (uint8_t)(~(1 << ch));
 }
+#endif
 
+#if ATM_FUNC_TEMPO
+void ATMsynth::setTempo(byte t)
+{
+  if (t == 0) t = 1;
+  tickRate = t;
+  cia = 15625 / tickRate;
+}
+#endif
 
+#if ATM_FUNC_SFX
+void ATMsynth::playSfx(const byte *track, byte ch) {
+  if (ch > 3) return;
+
+  if (sigmadeltaflag == false) {
+    tickRate = tickRate ? tickRate : 25;
+    cia = 15625 / tickRate;
+    cia_count = 1;
+    osc[3].freq = 0x0001;
+    channel[3].freq = 0x0001;
+    atmScorePaused = 1;
+    ChannelActiveMute = 0b11110000;
+    
+    noInterrupts();
+    sigmaDeltaSetup(0, 65000);
+    sigmaDeltaAttachPin(SOUNDPIN);
+    sigmaDeltaEnable();
+    sigmadeltaflag = true;
+    timer1_attachInterrupt(sound_speaker_ISR);
+    timer1_enable(TIM_DIV1, TIM_EDGE, TIM_LOOP);
+    timer1_write(80000000 / SAMPLE_RATE);
+    interrupts(); 
+  }
+
+  if (sfxOsc < 4 && sfxOsc != ch)
+    atmSfxMask &= (uint8_t)(~(1 << sfxOsc));
+  memset(&sfxV, 0, sizeof(sfxV));
+  sfxV.ptr = track;
+  sfxOsc = ch;
+  atmSfxMask = (uint8_t)(1 << ch);
+  if (ch == 3) osc[3].freq = 0x0001;
+}
+#endif
 
 void ATM_playroutine() {
   ch_t *ch;
 
-  // for every channel start working
+#if ATM_FUNC_SFX
+  for (byte pass = 0; pass < 2; pass++)
+#else
+  for (byte pass = 0; pass < 1; pass++)
+#endif
   for (byte n = 0; n < 4; n++)
   {
-    ch = &channel[n];
+    byte out = 1;
+    if (pass == 0) {
+      ch = &channel[n];
+#if ATM_FUNC_PAUSE || ATM_FUNC_RESUME || ATM_FUNC_PLAYPAUSE || ATM_FUNC_SFX
+      if (atmScorePaused) {
+#if ATM_FUNC_SFX
+        if (!(atmSfxMask & (1 << n))) osc[n].vol = 0;
+#else
+        osc[n].vol = 0;
+#endif
+        continue;
+      }
+#endif
+#if ATM_FUNC_SFX
+      out = !(atmSfxMask & (1 << n));
+#endif
+    } else {
+#if ATM_FUNC_SFX
+      if (sfxOsc != n) continue;
+      ch = &sfxV;
+#else
+      continue;
+#endif
+    }
 
-    // Noise retriggering
+#if ATM_FX_NOISE
     if (ch->reConfig) {
       if (ch->reCount >= (ch->reConfig & 0x03)) {
-        osc[n].freq = pgm_read_word(&noteTable[ch->reConfig >> 2]);
+        osc[3].freq = ATM__FREQ(ch->reConfig >> 2);
         ch->reCount = 0;
       }
       else ch->reCount++;
     }
+#endif
 
-
-    //Apply Glissando
+#if ATM_FX_GLISSANDO
     if (ch->glisConfig) {
       if (ch->glisCount >= (ch->glisConfig & 0x7F)) {
         if (ch->glisConfig & 0x80) ch->note -= 1;
         else ch->note += 1;
         if (ch->note < 1) ch->note = 1;
         else if (ch->note > 63) ch->note = 63;
-        ch->freq = pgm_read_word(&noteTable[ch->note]);
+        ch->freq = ATM__FREQ(ch->note);
         ch->glisCount = 0;
       }
       else ch->glisCount++;
     }
+#endif
 
-
-    // Apply volume/frequency slides
+#if ATM_FX_VOL_SLIDE || ATM_FX_FREQ_SLIDE
     if (ch->volFreSlide) {
       if (!ch->volFreCount) {
         int16_t vf = ((ch->volFreConfig & 0x40) ? ch->freq : ch->vol);
@@ -289,9 +450,9 @@ void ATM_playroutine() {
       }
       if (ch->volFreCount++ >= (ch->volFreConfig & 0x3F)) ch->volFreCount = 0;
     }
+#endif
 
-
-    // Apply Arpeggio or Note Cut
+#if ATM_FX_ARP || ATM_FX_NOTE_CUT
     if (ch->arpNotes && ch->note) {
       if ((ch->arpCount & 0x1F) < (ch->arpTiming & 0x1F)) ch->arpCount++;
       else {
@@ -304,12 +465,16 @@ void ATM_playroutine() {
           else arpNote += (ch->arpNotes >> 4);
         }
         if ((ch->arpCount & 0xE0) == 0x40) arpNote += (ch->arpNotes & 0x0F);
-        ch->freq = pgm_read_word(&noteTable[arpNote + ch->transConfig]);
+#if ATM_FX_TRANSPOSE
+        ch->freq = ATM__FREQ(arpNote + ch->transConfig);
+#else
+        ch->freq = ATM__FREQ(arpNote);
+#endif
       }
     }
+#endif
 
-
-    // Apply Tremolo or Vibrato
+#if ATM_FX_TREMOLO || ATM_FX_VIBRATO
     if (ch->treviDepth) {
       int16_t vt = ((ch->treviConfig & 0x40) ? ch->freq : ch->vol);
       vt = (ch->treviCount & 0x80) ? (vt + ch->treviDepth) : (vt - ch->treviDepth);
@@ -323,7 +488,7 @@ void ATM_playroutine() {
         else ch->treviCount = 0x80;
       }
     }
-
+#endif
 
     if (ch->delay) {
       if (ch->delay != 0xFFFF) ch->delay--;
@@ -332,106 +497,187 @@ void ATM_playroutine() {
       do {
         byte cmd = pgm_read_byte(ch->ptr++);
         if (cmd < 64) {
-          // 0 … 63 : NOTE ON/OFF
+#if ATM_FX_TRANSPOSE
           if (ch->note = cmd) ch->note += ch->transConfig;
-          ch->freq = pgm_read_word(&noteTable[ch->note]);
+#else
+          ch->note = cmd;
+#endif
+          ch->freq = ATM__FREQ(ch->note);
+#if ATM_FX_VOL_SLIDE || ATM_FX_FREQ_SLIDE
           if (!ch->volFreConfig) ch->vol = ch->reCount;
-          if (ch->arpTiming & 0x20) ch->arpCount = 0; // ARP retriggering
+#else
+          ch->vol = ch->reCount;
+#endif
+#if ATM_FX_ARP || ATM_FX_NOTE_CUT
+          if (ch->arpTiming & 0x20) ch->arpCount = 0;
+#endif
         }
         else if (cmd < 160) {
-          // 64 … 159 : SETUP FX
           switch (cmd - 64) {
-            case 0: // Set volume
+#if ATM_FX_VOLUME
+            case 0:
               ch->vol = pgm_read_byte(ch->ptr++);
               ch->reCount = ch->vol;
               break;
-            case 1: case 4: // Slide volume/frequency ON
+#endif
+#if ATM_FX_VOL_SLIDE && ATM_FX_FREQ_SLIDE
+            case 1: case 4:
               ch->volFreSlide = pgm_read_byte(ch->ptr++);
               ch->volFreConfig = (cmd - 64) == 1 ? 0x00 : 0x40;
               break;
-            case 2: case 5: // Slide volume/frequency ON advanced
+            case 2: case 5:
+              ch->volFreSlide = pgm_read_byte(ch->ptr++);
+              ch->volFreConfig = pgm_read_byte(ch->ptr++);
+              if ((cmd - 64) == 5) ch->volFreConfig |= 0x40;
+              break;
+            case 3: case 6:
+              ch->volFreSlide = 0;
+              break;
+#elif ATM_FX_VOL_SLIDE
+            case 1:
+              ch->volFreSlide = pgm_read_byte(ch->ptr++);
+              ch->volFreConfig = 0x00;
+              break;
+            case 2:
               ch->volFreSlide = pgm_read_byte(ch->ptr++);
               ch->volFreConfig = pgm_read_byte(ch->ptr++);
               break;
-            case 3: case 6: // Slide volume/frequency OFF (same as 0x01 0x00)
+            case 3:
               ch->volFreSlide = 0;
               break;
-            case 7: // Set Arpeggio
-              ch->arpNotes = pgm_read_byte(ch->ptr++);    // 0x40 + 0x03
-              ch->arpTiming = pgm_read_byte(ch->ptr++);   // 0x40 (no third note) + 0x20 (toggle retrigger) + amount
+#elif ATM_FX_FREQ_SLIDE
+            case 4:
+              ch->volFreSlide = pgm_read_byte(ch->ptr++);
+              ch->volFreConfig = 0x40;
               break;
-            case 8: // Arpeggio OFF
+            case 5:
+              ch->volFreSlide = pgm_read_byte(ch->ptr++);
+              ch->volFreConfig = pgm_read_byte(ch->ptr++);
+              ch->volFreConfig |= 0x40;
+              break;
+            case 6:
+              ch->volFreSlide = 0;
+              break;
+#endif
+#if ATM_FX_ARP
+            case 7:
+              ch->arpNotes = pgm_read_byte(ch->ptr++);
+              ch->arpTiming = pgm_read_byte(ch->ptr++);
+              break;
+            case 8:
               ch->arpNotes = 0;
               break;
-            case 9: // Set Retriggering (noise)
-              ch->reConfig = pgm_read_byte(ch->ptr++);    // RETRIG: point = 1 (*4), speed = 0 (0 = fastest, 1 = faster , 2 = fast)
+#endif
+#if ATM_FX_NOISE
+            case 9:
+              ch->reConfig = pgm_read_byte(ch->ptr++);
               break;
-            case 10: // Retriggering (noise) OFF
+            case 10:
               ch->reConfig = 0;
               break;
-            case 11: // ADD Transposition
+#endif
+#if ATM_FX_TRANSPOSE
+            case 11:
               ch->transConfig += (char)pgm_read_byte(ch->ptr++);
               break;
-            case 12: // SET Transposition
+            case 12:
               ch->transConfig = pgm_read_byte(ch->ptr++);
               break;
-            case 13: // Transposition OFF
+            case 13:
               ch->transConfig = 0;
               break;
-            case 14: case 16: // SET Tremolo/Vibrato
+#endif
+#if ATM_FX_TREMOLO && ATM_FX_VIBRATO
+            case 14: case 16:
               ch->treviDepth = pgm_read_word(ch->ptr++);
               ch->treviConfig = pgm_read_word(ch->ptr++) + ((cmd - 64) == 14 ? 0x00 : 0x40);
               break;
-            case 15: case 17: // Tremolo/Vibrato OFF
+            case 15: case 17:
               ch->treviDepth = 0;
               break;
-            case 18: // Glissando
+#elif ATM_FX_TREMOLO
+            case 14:
+              ch->treviDepth = pgm_read_word(ch->ptr++);
+              ch->treviConfig = pgm_read_word(ch->ptr++);
+              break;
+            case 15:
+              ch->treviDepth = 0;
+              break;
+#elif ATM_FX_VIBRATO
+            case 16:
+              ch->treviDepth = pgm_read_word(ch->ptr++);
+              ch->treviConfig = pgm_read_word(ch->ptr++) + 0x40;
+              break;
+            case 17:
+              ch->treviDepth = 0;
+              break;
+#endif
+#if ATM_FX_GLISSANDO
+            case 18:
               ch->glisConfig = pgm_read_byte(ch->ptr++);
               break;
-            case 19: // Glissando OFF
+            case 19:
               ch->glisConfig = 0;
               break;
-            case 20: // SET Note Cut
-              ch->arpNotes = 0xFF;                        // 0xFF use Note Cut
-              ch->arpTiming = pgm_read_byte(ch->ptr++);   // tick amount
+#endif
+#if ATM_FX_NOTE_CUT
+            case 20:
+              ch->arpNotes = 0xFF;
+              ch->arpTiming = pgm_read_byte(ch->ptr++);
               break;
-            case 21: // Note Cut OFF
+            case 21:
               ch->arpNotes = 0;
               break;
-            case 92: // ADD tempo
+#endif
+#if ATM_FX_CUE
+            case 23:
+              atmCue = pgm_read_byte(ch->ptr++);
+              break;
+#endif
+#if ATM_FX_TEMPO
+            case 92:
               tickRate += pgm_read_byte(ch->ptr++);
               cia = 15625 / tickRate;
               break;
-            case 93: // SET tempo
+            case 93:
               tickRate = pgm_read_byte(ch->ptr++);
               cia = 15625 / tickRate;
               break;
-            case 94: // Goto advanced
+#endif
+#if ATM_FX_GOTO_ADV
+            case 94:
               for (byte i = 0; i < 4; i++) channel[i].repeatPoint = pgm_read_byte(ch->ptr++);
               break;
-            case 95: // Stop channel
-              ChannelActiveMute = ChannelActiveMute ^ (1 << (n + 4));
-              ch->vol = 0;
-              ch->delay = 0xFFFF;
+#endif
+#if ATM_FX_STOP
+            case 95:
+              if (pass) {
+                ch->vol = 0;
+                ch->delay = 0xFFFF;
+#if ATM_FUNC_SFX
+                sfxOsc = 0xFF;
+                atmSfxMask &= (uint8_t)(~(1 << n));
+#endif
+              } else {
+                ChannelActiveMute ^= (uint8_t)(1 << (n + 4));
+                ch->vol = 0;
+                ch->delay = 0xFFFF;
+              }
               break;
+#endif
           }
         } else if (cmd < 224) {
-          // 160 … 223 : DELAY
           ch->delay = cmd - 159;
         } else if (cmd == 224) {
-          // 224: LONG DELAY
           ch->delay = read_vle(&ch->ptr) + 65;
         } else if (cmd < 252) {
-          // 225 … 251 : RESERVED
         } else if (cmd == 252 || cmd == 253) {
-          // 252 (253) : CALL (REPEATEDLY)
           byte new_counter = cmd == 252 ? 0 : pgm_read_byte(ch->ptr++);
           byte new_track = pgm_read_byte(ch->ptr++);
 
           if (new_track != ch->track) {
-            // Stack PUSH
             ch->stackCounter[ch->stackIndex] = ch->counter;
-            ch->stackTrack[ch->stackIndex] = ch->track; // note 1
+            ch->stackTrack[ch->stackIndex] = ch->track;
             ch->stackPointer[ch->stackIndex] = ch->ptr - trackBase;
             ch->stackIndex++;
             ch->track = new_track;
@@ -440,46 +686,36 @@ void ATM_playroutine() {
           ch->counter = new_counter;
           ch->ptr = getTrackPointer(ch->track);
         } else if (cmd == 254) {
-          // 254 : RETURN
           if (ch->counter > 0 || ch->stackIndex == 0) {
-            // Repeat track
             if (ch->counter) ch->counter--;
             ch->ptr = getTrackPointer(ch->track);
-            //asm volatile ("  jmp 0"); // reboot
           } else {
-            // Check stack depth
             if (ch->stackIndex == 0) {
-              // Stop the channel
               ch->delay = 0xFFFF;
             } else {
-              // Stack POP
               ch->stackIndex--;
               ch->ptr = ch->stackPointer[ch->stackIndex] + trackBase;
               ch->counter = ch->stackCounter[ch->stackIndex];
-              ch->track = ch->stackTrack[ch->stackIndex]; // note 1
+              ch->track = ch->stackTrack[ch->stackIndex];
             }
           }
-        } else if (cmd == 255) {
-          // 255 : EMBEDDED DATA
-          ch->ptr += read_vle(&ch->ptr);
         }
       } while (ch->delay == 0);
 
       if (ch->delay != 0xFFFF) ch->delay--;
     }
 
-    if (!(ChannelActiveMute & (1 << n))) {
+    if (out && !(ChannelActiveMute & (1 << n))) {
       if (n == 3) {
-        // Half volume, no frequency for noise channel
         osc[n].vol = ch->vol >> 1;
-      } else {
+      } else
+      {
         osc[n].freq = ch->freq;
         osc[n].vol = ch->vol;
       }
     }
-    // if all channels are inactive, stop playing or check for repeat
 
-    if (!(ChannelActiveMute & 0xF0))
+    if (pass == 0 && !(ChannelActiveMute & 0xF0))
     {
       byte repeatSong = 0;
       for (byte j = 0; j < 4; j++) repeatSong += channel[j].repeatPoint;
@@ -490,10 +726,26 @@ void ATM_playroutine() {
         }
         ChannelActiveMute = 0b11110000;
       }
+#if ATM_FUNC_SFX
+      else if (sfxOsc >= 4)
+#else
       else
+#endif
       {
         ATMsynth::stop();
       }
     }
   }
 }
+
+#if ATM_FUNC_CUE
+uint8_t ATMsynth::check() {
+  uint8_t v = atmCue;
+  atmCue = 0;
+  return v;
+}
+
+uint8_t ATMsynth::check(uint8_t id) {
+  return atmCue == id;
+}
+#endif
