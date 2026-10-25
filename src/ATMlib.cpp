@@ -1,5 +1,6 @@
 #include "ATMlib.h"
-#define SAMPLE_RATE 16000
+// Эталонная частота для идеального звучания генераторов
+#define SAMPLE_RATE 31250
 #define SOUNDPIN D3
 
 uint16_t cia, cia_count;
@@ -16,41 +17,60 @@ uint8_t atmScorePaused;
 uint8_t atmSfxMask;
 #endif
 
-// Обработчик прерывания (теперь без опасного вызова sei() для ESP8266)
+// Обновленный ISR: 31250 Гц для чистого звука, делитель для правильного темпа и очень тихие ударные
 void IRAM_ATTR sound_speaker_ISR()
 {
-  osc[2].phase += osc[2].freq;
-  int8_t phase2 = osc[2].phase >> 8;
-  if (phase2 < 0) phase2 = ~phase2;
-  phase2 <<= 1;
-  phase2 -= 128;
-  int8_t vol = ((phase2 * int8_t(osc[2].vol)) << 1) >> 8;
+  int16_t volSum = 0;
 
+  // Канал 0: Пульс
   osc[0].phase += osc[0].freq; 
   int8_t vol0 = osc[0].vol;
   if (osc[0].phase >= 0xC000) vol0 = -vol0;
-  vol += vol0;
+  volSum += vol0;
 
+  // Канал 1: Квадрат
   osc[1].phase += osc[1].freq; 
   int8_t vol1 = osc[1].vol;
   if (osc[1].phase & 0x8000) vol1 = -vol1;
-  vol += vol1;
+  volSum += vol1;
 
+  // Канал 2: Пилообразная волна (SAW)
+  osc[2].phase += osc[2].freq;
+  int8_t phase2 = (osc[2].phase >> 8) - 128;
+  int16_t out2 = phase2 * (int8_t)osc[2].vol;
+  volSum += (out2 >> 8);
+
+  // Канал 3: Шум (LFSR)
   uint16_t freq = osc[3].freq; 
   freq <<= 1;
   if (freq & 0x8000) freq ^= 1;
   if (freq & 0x4000) freq ^= 1;
   osc[3].freq = freq;
+  
   int8_t vol3 = osc[3].vol;
   if (freq & 0x8000) vol3 = -vol3;
-  vol += vol3;
+  
+  // УДАРНЫЕ: Делим громкость шума на 6 (еще на 50% тише от прошлого варианта)
+  volSum += (vol3 / 6);
 
-  sigmaDeltaWrite(0, vol + pcm);
-  if (--cia_count) return;
+  // ЗАЩИТА ОТ ТРЕСКА (Soft Clamping): предотвращает искажения при переполнении суммы каналов
+  int16_t out = volSum + pcm;
+  if (out > 255) out = 255;
+  else if (out < 0) out = 0;
 
-  cia_count = cia;
-  // sei(); <-- УДАЛЕНО: на ESP8266 включение прерываний внутри ISR вызывает краш
-  ATM_playroutine();
+  sigmaDeltaWrite(0, (uint8_t)out);
+
+  // КОНТРОЛЬ ТЕМПА: обновляем логику трекера каждый ВТОРОЙ сэмпл (15625 Гц)
+  // Это возвращает скорость мелодии к оригиналу 1:1, не снижая качество звука
+  static bool tempo_tick = false;
+  tempo_tick = !tempo_tick;
+  
+  if (tempo_tick) {
+    if (--cia_count == 0) {
+      cia_count = cia;
+      ATM_playroutine();
+    }
+  }
 }
 
 byte trackCount;
@@ -208,8 +228,6 @@ uint16_t IRAM_ATTR read_vle(const byte **pp) {
 }
 
 static inline const byte * IRAM_ATTR getTrackPointer(byte track) {
-  // ИСПРАВЛЕНИЕ: Побайтовое чтение адреса из флэш-памяти для избежания 
-  // LoadStoreAlignmentException (Exception 9) при невыровненном доступе
   const byte* tl = (const byte*)trackList;
   word offset = pgm_read_byte(&tl[track * 2]) | (pgm_read_byte(&tl[track * 2 + 1]) << 8);
   return trackBase + offset;
@@ -597,7 +615,6 @@ void IRAM_ATTR ATM_playroutine() {
 #endif
 #if ATM_FX_TREMOLO && ATM_FX_VIBRATO
             case 14: case 16:
-              // ИСПРАВЛЕНИЕ: Оригинальная библиотека неверно использует pgm_read_word для байтовых параметров
               ch->treviDepth = pgm_read_byte(ch->ptr++);
               ch->treviConfig = pgm_read_byte(ch->ptr++) + ((cmd - 64) == 14 ? 0x00 : 0x40);
               break;
