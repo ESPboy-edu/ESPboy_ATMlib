@@ -35,7 +35,7 @@ While _Squawk_ provides a very nice synth, it wasn't optimized for a small footp
 * [4. How the playroutine really behaves](#4-how-the-playroutine-really-behaves)
 * [5. Timing, tempo and pitch](#5-timing-tempo-and-pitch)
 * [6. Hop-free loops: the self-loop](#6-hop-free-loops-the-self-loop-the-most-important-section)
-* [7. Fitting a byte budget](#7-fitting-a-byte-budget) (7.1 making a finished song smaller)
+* [7. Fitting a byte budget](#7-fitting-a-byte-budget) (7.1 making a finished song smaller, 7.2 shrinking it automatically)
 * [8. Composition recipes that worked](#8-composition-recipes-that-worked)
 * [9. Tooling](#9-tooling)
 * [10. Output file template](#10-output-file-template)
@@ -132,7 +132,7 @@ A one-track effect is a PROGMEM byte list that ends with `ATM_STOP_CHAN`. `ATMcm
 ATM_SFX_TRACK(sfxJump,
   ATM_VOL(50),
   ATM_SL_VOL((uint8_t)-3),   // fade out
-  ATM_GLIS(0),               // glide up one semitone per tick
+  ATM_GLIS(0x01),            // glide up one semitone per 2 ticks (ATM_GLIS(0) = glissando OFF, so use 0x01 or more for upward; 0x80 = down, 1 tick per semitone)
   ATM_NOTE_C4,
   ATM_DELAY(14)
 );
@@ -198,7 +198,8 @@ Waveforms, effects, functions and octaves are fixed at compile time. Copy `docs/
 
 * **Waveforms:** `ATM_WAVE_CH0` to `ATM_WAVE_CH3` = `ATM_WAVE_PULSE` (0), `ATM_WAVE_SQUARE` (1), `ATM_WAVE_NOISE` (2, use on CH3), `ATM_WAVE_SAW` (3) or `ATM_WAVE_OFF` (255, no mixer for that channel = smaller ISR and fewer cycles). If no channel is noise, the LFSR is left out of the ISR.
 * **`ATM_ALT_WIRING`:** 0 = stock Arduboy speaker on OCR4A only; 1 = also drive OCR4D (homemade or dual-pin wiring).
-* **Effects, functions, octaves:** switches such as `ATM_FX_ARP`, `ATM_FUNC_SFX`, `ATM_OCTAVE_6`. `ATM.play()` is always compiled. `ATM_FUNC_PLAYPAUSE` needs pause and resume.
+* **Effects, functions, octaves:** switches such as `ATM_FX_ARP`, `ATM_FUNC_SFX`, `ATM_OCTAVE_6`.
+* **RAM:** `ATM_STACK_DEPTH` (default 7) is the call-stack depth of every channel, 4 bytes of RAM per level per channel; set it to the deepest nesting of your song (the generators report it) to get RAM back. Too small a value corrupts memory. `ATM.play()` is always compiled. `ATM_FUNC_PLAYPAUSE` needs pause and resume.
 
 > **Warning:** the song bytes are never rewritten. If a flag is 0 and a song or sound effect still uses that effect, function or octave, playback breaks: the player ignores the command and does not consume its parameter bytes, a removed function will not compile, and an excluded note is silent. That is the sketch author's responsibility.
 
@@ -367,7 +368,7 @@ A single-file HTML tracker for this library (`atm-tracker-editor.html`; the proj
 
 **Load** accepts JSON and `song.h` files written with ATM commands. Macros such as `ATM_NOTE_A5_`, `ATM_SET_TRA(-5)`, `ATM_SL_VOL(-4)` are expanded. With several arrays in one file, the first valid score header is imported as four channel patterns on the song timeline. Very nested `GOTO` / `REPEAT` songs are flattened onto a 64-tick grid per channel so you can edit them.
 
-**Export** as **commands** or **hex**: a SONG becomes `const uint8_t score[] PROGMEM` for `ATM.play(score)`, an SFX becomes `ATM_SFX_TRACK`. Rests and holds become `ATM_DELAY`; the arrangement becomes `ATM_GOTO` chains of pattern tracks.
+**Export** as **commands** or **hex**: a SONG becomes `const uint8_t score[] PROGMEM` for `ATM.play(score)`, an SFX becomes `ATM_SFX_TRACK`. Rests and holds become `ATM_DELAY`; the arrangement becomes `ATM_GOTO` chains of pattern tracks. Tick **Shrink song** in the Export tab to make the song smaller without changing how it sounds (dead commands removed, repeated runs shared in extra tracks, see section 7.2).
 
 **Playback** in the editor is Web Audio, not cycle-accurate to the AVR interrupt routine. For a device-faithful listen, compile a hex and run it in an emulator such as Ardens, or on hardware.
 
@@ -787,6 +788,26 @@ Quest Theme budget (233 bytes, self-loop): header 29 B, drums 39 (entry + core +
 * the per-tick `TIMELINE` (volume and frequency of the 4 channels) equals the old one. When the old song is a `STOP` + `GOTO_ADV` loop, compare over one pass and expect differences only in the old silent restart tick. A silent channel's frequency may differ (inaudible);
 * loops 1, 2 and 3 of the new song are identical, `restarts == []`, no `STOP` after tick 0, call depth <= 7;
 * the compiled header equals the generator's bytes.
+
+### 7.2 Shrinking a finished song automatically (Tracker editor button `Shrink song`)
+
+The two biggest savings of 7.1 can be found by a program. Both are lossless: the result must play exactly like the original.
+
+1. **Remove commands that change nothing.** Try deleting each `VOL`, `SL_VOL`, `SL_FRQ`, `SET_TRA`, `ARP`, `VIB`, `TREM`, `GLIS` and similar command, one at a time. Keep the deletion only when the simulated sound is identical (volume and frequency of the channel on every tick, plus every note event). A repeated `SET_TRA(0)`, a `VOL` that is already set, or a slide that is set again with the same value are typical. Tempo, `STOP`, `GOTO`, `REPEAT` and `RETURN` are never touched.
+2. **Share repeated runs.** Any run of two or more commands that appears at least twice, in one track or across tracks, becomes a new track called with `GOTO`. A run of `L` bytes used `u` times saves `u x L - (L + 1 + 2 + 2u)` bytes, and only runs with a saving above zero are shared. The best run goes first, then the search starts again, until nothing pays. New tracks are appended at the end, so no existing track number changes. Not shared: `REPEAT`, `RETURN`, `STOP`, tempo commands, and a `GOTO` to its own track or to an entry track. Channel state (volume, slide, arpeggio, transposition) survives a call and a return, so a run does the same thing wherever it is called, but every level of sharing adds one to the call depth: the result is rejected above 7.
+
+Do the first pass first: removing dead commands makes more runs identical. Then check the result like in 7.1 (events, per-tick timeline, loops, depth <= 7, compile). The editor does all of it itself and refuses the result if any check fails.
+
+| Song set | Before | After | Passes |
+|---|---|---|---|
+| Sirene, 13 songs | 2838 B | 2734 B | share |
+| Begemmed | 4140 B | 3362 B | share |
+| Virus LQP-79, 8 songs | 1726 B | 1638 B | remove + share (27 dead commands removed) |
+| ECOMD / Fish / Shadow Runner / Dice / FRMP / RMH / Blob Attack | | 128 / 123 / 118 / 86 / 97 / 91 / 35 B saved | share |
+
+Where it helps most: songs written from a generator or by hand with many repeated `VOL / SL_VOL / SET_TRA` heads (drum hits, chord stabs). A song that is already compressed by hand (like `italoDiscoCompressed`) gains little.
+
+**In the tracker editor:** Export tab, tick **Shrink song**. The green line shows the bytes saved and how many dead commands were removed and tracks added. The setting is saved with the song. **For a hand-written `song.h`:** the same two passes exist as small Python scripts (`shrink.py` for generator songs, `shrinkmusic.py` and `prunemusic.py` for a ready-made `music.h`, kept with the project scripts); both use `atmsim.py` for the check.
 
 ---
 

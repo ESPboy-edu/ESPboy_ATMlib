@@ -182,7 +182,7 @@ static void playSong() {
 }
 
 void setup() {
-  arduboy.begin();
+  arduboy.boot();
   arduboy.setFrameRate(60);
   arduboy.audio.on();
   playSong();

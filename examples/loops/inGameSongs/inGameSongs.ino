@@ -101,7 +101,7 @@ void draw() {
 }
 
 void setup() {
-  arduboy.begin();
+  arduboy.boot();
   arduboy.setFrameRate(30);
   arduboy.audio.on();
   playCurrent();

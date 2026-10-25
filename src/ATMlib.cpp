@@ -5,7 +5,7 @@
 uint16_t cia, cia_count;
 static bool sigmadeltaflag = 0;
 
-
+// Переменные состояния
 #if ATM_FX_CUE || ATM_FUNC_CUE
 uint8_t atmCue;
 #endif
@@ -16,6 +16,7 @@ uint8_t atmScorePaused;
 uint8_t atmSfxMask;
 #endif
 
+// Обработчик прерывания (теперь без опасного вызова sei() для ESP8266)
 void IRAM_ATTR sound_speaker_ISR()
 {
   osc[2].phase += osc[2].freq;
@@ -48,7 +49,7 @@ void IRAM_ATTR sound_speaker_ISR()
   if (--cia_count) return;
 
   cia_count = cia;
-  sei();
+  // sei(); <-- УДАЛЕНО: на ESP8266 включение прерываний внутри ISR вызывает краш
   ATM_playroutine();
 }
 
@@ -61,7 +62,7 @@ uint8_t pcm = 128;
 byte ChannelActiveMute = 0b11110000;
 osc_t osc[4];
 
-// Таблица частот[cite: 9]
+// Таблица частот
 #if ATM_OCTAVE_2 && ATM_OCTAVE_3 && ATM_OCTAVE_4 && ATM_OCTAVE_5 && ATM_OCTAVE_6 && ATM_OCTAVE_7
 const word noteTable[64] PROGMEM = {
 #else
@@ -91,7 +92,7 @@ const word noteTable[] PROGMEM = {
 #if ATM_OCTAVE_2 && ATM_OCTAVE_3 && ATM_OCTAVE_4 && ATM_OCTAVE_5 && ATM_OCTAVE_6 && ATM_OCTAVE_7
 #define ATM__FREQ(note) pgm_read_word(&noteTable[note])
 #else
-static inline uint16_t atmNoteFreq(int note) {
+static inline uint16_t IRAM_ATTR atmNoteFreq(int note) {
   if (note < 1 || note > 63) return 0;
   uint8_t index = 0;
   uint8_t n = (uint8_t)note;
@@ -141,9 +142,11 @@ static inline uint16_t atmNoteFreq(int note) {
 struct ch_t {
   const byte *ptr;
   byte note;
-  word stackPointer[7];
-  byte stackCounter[7];
-  byte stackTrack[7];
+
+  word stackPointer[ATM_STACK_DEPTH];
+  byte stackCounter[ATM_STACK_DEPTH];
+  byte stackTrack[ATM_STACK_DEPTH]; 
+  
   byte stackIndex;
   byte repeatPoint;
   word delay;
@@ -192,19 +195,24 @@ ch_t sfxV;
 uint8_t sfxOsc = 0xFF;
 #endif
 
-uint16_t read_vle(const byte **pp) {
+uint16_t IRAM_ATTR read_vle(const byte **pp) {
   word q = 0;
   byte d;
   do {
     q <<= 7;
-    d = pgm_read_byte(*pp++);
+    d = pgm_read_byte(*pp);
+    (*pp)++;
     q |= (d & 0x7F);
   } while (d & 0x80);
   return q;
 }
 
-static inline const byte *getTrackPointer(byte track) {
-  return trackBase + pgm_read_word(&trackList[track]);
+static inline const byte * IRAM_ATTR getTrackPointer(byte track) {
+  // ИСПРАВЛЕНИЕ: Побайтовое чтение адреса из флэш-памяти для избежания 
+  // LoadStoreAlignmentException (Exception 9) при невыровненном доступе
+  const byte* tl = (const byte*)trackList;
+  word offset = pgm_read_byte(&tl[track * 2]) | (pgm_read_byte(&tl[track * 2 + 1]) << 8);
+  return trackBase + offset;
 }
 
 void ATMsynth::play(const byte *song) {
@@ -377,7 +385,7 @@ void ATMsynth::playSfx(const byte *track, byte ch) {
 }
 #endif
 
-void ATM_playroutine() {
+void IRAM_ATTR ATM_playroutine() {
   ch_t *ch;
 
 #if ATM_FUNC_SFX
@@ -589,24 +597,25 @@ void ATM_playroutine() {
 #endif
 #if ATM_FX_TREMOLO && ATM_FX_VIBRATO
             case 14: case 16:
-              ch->treviDepth = pgm_read_word(ch->ptr++);
-              ch->treviConfig = pgm_read_word(ch->ptr++) + ((cmd - 64) == 14 ? 0x00 : 0x40);
+              // ИСПРАВЛЕНИЕ: Оригинальная библиотека неверно использует pgm_read_word для байтовых параметров
+              ch->treviDepth = pgm_read_byte(ch->ptr++);
+              ch->treviConfig = pgm_read_byte(ch->ptr++) + ((cmd - 64) == 14 ? 0x00 : 0x40);
               break;
             case 15: case 17:
               ch->treviDepth = 0;
               break;
 #elif ATM_FX_TREMOLO
             case 14:
-              ch->treviDepth = pgm_read_word(ch->ptr++);
-              ch->treviConfig = pgm_read_word(ch->ptr++);
+              ch->treviDepth = pgm_read_byte(ch->ptr++);
+              ch->treviConfig = pgm_read_byte(ch->ptr++);
               break;
             case 15:
               ch->treviDepth = 0;
               break;
 #elif ATM_FX_VIBRATO
             case 16:
-              ch->treviDepth = pgm_read_word(ch->ptr++);
-              ch->treviConfig = pgm_read_word(ch->ptr++) + 0x40;
+              ch->treviDepth = pgm_read_byte(ch->ptr++);
+              ch->treviConfig = pgm_read_byte(ch->ptr++) + 0x40;
               break;
             case 17:
               ch->treviDepth = 0;

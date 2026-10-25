@@ -325,6 +325,8 @@
         .content-section hr { border: none; border-top: 2px solid #4a3b3a; margin: 24px 0; }
         .content-section input[type=checkbox] { margin-right: 6px; }
     </style>
+<script data-goatcounter="https://teamarg.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
     <header>
@@ -542,7 +544,7 @@ void loop() {
 <pre><code class="language-cpp">ATM_SFX_TRACK(sfxJump,
   ATM_VOL(50),
   ATM_SL_VOL((uint8_t)-3),   // fade out
-  ATM_GLIS(0),               // glide up one semitone per tick
+  ATM_GLIS(0x01),            // glide up one semitone per 2 ticks (ATM_GLIS(0) = glissando OFF, so use 0x01 or more for upward; 0x80 = down, 1 tick per semitone)
   ATM_NOTE_C4,
   ATM_DELAY(14)
 );
@@ -1615,6 +1617,70 @@ then                 track data, tracks back to back, in table order
 <li>Chords as explicit long notes with an arp: <code>NOTE, DELAY(64), NOTE, DELAY(64)</code> is 4 bytes per two bars.</li>
 </ol>
 <p>Quest Theme budget (233 bytes, self-loop): header 29 B, drums 39 (entry + core + half), lead 68, chords 41, bass 56. (The old STOP + <code>GOTO_ADV</code> version was 247 B: it needed the 5-byte <code>GOTO_ADV</code>, a trimmed <code>bass_bar_last</code> track and <code>STOP</code>s.)</p>
+<h3>7.1 Making a song smaller without changing it (Italo Night: 469 B to 365 B)</h3>
+<p><code>italoDiscoCompressed</code> (<code>examples/loops/italoDiscoCompressed</code>) plays exactly like <code>italoNight</code> and is 104 bytes smaller (22 %). Counting from the first version: 558 B (<code>STOP</code> + <code>GOTO_ADV</code>), 469 B (self-loop), 365 B (compressed). The work is structure, not notes. In order of savings:</p>
+<ol>
+<li><strong>Inline every track that is called once.</strong> A track used once costs its table entry (2), its <code>RETURN</code> (1) and the call (2): 5 bytes for nothing. The 558 B version of Italo Night had 33 tracks (header 71 bytes); the compressed one has 16 (header 37 bytes).</li>
+<li><strong>Use the entry track as the body.</strong> With the self-loop (section 6) the lead is one track: all 8 bars in a row, then <code>ATM_GOTO(itself)</code>. The bass and chords are the same. No <code>_last</code> tracks, no trimmed last delays.</li>
+<li><strong>Share a track only when it pays.</strong> A track of length <code>L</code> used <code>u</code> times costs <code>L + 1 + 2 + 2u</code> against <code>u x L</code> inline, so it wins when <code>(u - 1) x L &gt; 2u + 3</code>: two uses need <code>L &gt;= 8</code>, three uses <code>L &gt;= 5</code>.</li>
+<li><strong>Repeat bigger blocks.</strong> The drums play 4 bars, twice. Put those 4 bars in one track (<code>REPEAT(6, pair)</code>, beat A, roll, delay) and call it with <code>REPEAT(1, half)</code>: the second half costs nothing. The same applies to the chords (<code>REPEAT(3, beat_X)</code> per bar).</li>
+<li><strong>Share the common head.</strong> Every chord stab starts with the same kick (<code>ARP_OFF, SL_FRQ, VOL, NOTE, DELAY, VOL(0), DELAY, SL_VOL, VOL</code>). It is one <code>kick</code> track called by the five beat tracks. After the self-loop the 4th beat of the last bar is the same beat track as the others, so it needs no special case.</li>
+<li><strong>Transpose instead of copy, and share the start of near-identical beats.</strong> One bass bar track, eight <code>SET_TRA, GOTO bar</code> pairs (4 bytes per bar). The bass beats <code>silence, root, octave, root</code> and <code>silence, root, root, octave</code> both start with <code>VOL(0), DELAY(4), VOL(63), root, DELAY(4)</code>: that head is one 8-byte track, the two beats only add their last two notes (5 bytes saved). Where several pieces differ only at the end, share the head. Snare roll: the slide is set once, the roll is inlined in the drum half (it is only used there), and equal neighbours collapse into one <code>REPEAT</code> (two equal bars next to each other: <code>REPEAT(1, bar)</code>).</li>
+<li><strong>Drop commands that do nothing.</strong> Slides, volume and arpeggio are state that persists, so a second <code>SL_VOL(-3)</code> or <code>ARP_OFF</code> with the same value is dead weight. Only remove one after the simulator proves the timeline is unchanged.</li>
+</ol>
+<p><strong>What did not pay.</strong> Sharing the lead between bars: bars 1 to 4 have the same rhythm (12, 12, 8, 12, 12, 8) but different intervals (E C A, F C A, E C G, D B G), so a shared track would need a different transposition and one changed note per bar, and the extra track costs more than the 5 to 9 bytes it saves. Look for repetition in the <em>byte stream</em>, not in the rhythm: a candidate is only worth a track when the same sequence of commands (or the same sequence shifted by a constant) appears with <code>(u - 1) x L &gt; 2u + 3</code>.</p>
+<p><strong>How to be sure it is the same song</strong> (the check used here, all four must hold):</p>
+<ul>
+<li>all note events of the new song equal those of the old song, tick for tick;</li>
+<li>the per-tick <code>TIMELINE</code> (volume and frequency of the 4 channels) equals the old one. When the old song is a <code>STOP</code> + <code>GOTO_ADV</code> loop, compare over one pass and expect differences only in the old silent restart tick. A silent channel's frequency may differ (inaudible);</li>
+<li>loops 1, 2 and 3 of the new song are identical, <code>restarts == []</code>, no <code>STOP</code> after tick 0, call depth &lt;= 7;</li>
+<li>the compiled header equals the generator's bytes.</li>
+</ul>
+<h3>7.2 Shrinking a finished song automatically (Tracker editor button <code>Shrink song</code>)</h3>
+<p>The two biggest savings of 7.1 can be found by a program. Both are lossless: the result must play exactly like the original.</p>
+<ol>
+<li><strong>Remove commands that change nothing.</strong> Try deleting each <code>VOL</code>, <code>SL_VOL</code>, <code>SL_FRQ</code>, <code>SET_TRA</code>, <code>ARP</code>, <code>VIB</code>, <code>TREM</code>, <code>GLIS</code> and similar command, one at a time. Keep the deletion only when the simulated sound is identical (volume and frequency of the channel on every tick, plus every note event). A repeated <code>SET_TRA(0)</code>, a <code>VOL</code> that is already set, or a slide that is set again with the same value are typical. Tempo, <code>STOP</code>, <code>GOTO</code>, <code>REPEAT</code> and <code>RETURN</code> are never touched.</li>
+<li><strong>Share repeated runs.</strong> Any run of two or more commands that appears at least twice, in one track or across tracks, becomes a new track called with <code>GOTO</code>. A run of <code>L</code> bytes used <code>u</code> times saves <code>u x L - (L + 1 + 2 + 2u)</code> bytes, and only runs with a saving above zero are shared. The best run goes first, then the search starts again, until nothing pays. New tracks are appended at the end, so no existing track number changes. Not shared: <code>REPEAT</code>, <code>RETURN</code>, <code>STOP</code>, tempo commands, and a <code>GOTO</code> to its own track or to an entry track. Channel state (volume, slide, arpeggio, transposition) survives a call and a return, so a run does the same thing wherever it is called, but every level of sharing adds one to the call depth: the result is rejected above 7.</li>
+</ol>
+<p>Do the first pass first: removing dead commands makes more runs identical. Then check the result like in 7.1 (events, per-tick timeline, loops, depth &lt;= 7, compile). The editor does all of it itself and refuses the result if any check fails.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Song set</th>
+<th>Before</th>
+<th>After</th>
+<th>Passes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sirene, 13 songs</td>
+<td>2838 B</td>
+<td>2734 B</td>
+<td>share</td>
+</tr>
+<tr>
+<td>Begemmed</td>
+<td>4140 B</td>
+<td>3362 B</td>
+<td>share</td>
+</tr>
+<tr>
+<td>Virus LQP-79, 8 songs</td>
+<td>1726 B</td>
+<td>1638 B</td>
+<td>remove + share (27 dead commands removed)</td>
+</tr>
+<tr>
+<td>ECOMD / Fish / Shadow Runner / Dice / FRMP / RMH / Blob Attack</td>
+<td></td>
+<td>128 / 123 / 118 / 86 / 97 / 91 / 35 B saved</td>
+<td>share</td>
+</tr>
+</tbody>
+</table></div>
+<p>Where it helps most: songs written from a generator or by hand with many repeated <code>VOL / SL_VOL / SET_TRA</code> heads (drum hits, chord stabs). A song that is already compressed by hand (like <code>italoDiscoCompressed</code>) gains little.</p>
+<p><strong>In the tracker editor:</strong> Export tab, tick <strong>Shrink song</strong>. The green line shows the bytes saved and how many dead commands were removed and tracks added. The setting is saved with the song. <strong>For a hand-written <code>song.h</code>:</strong> the same two passes exist as small Python scripts (<code>shrink.py</code> for generator songs, <code>shrinkmusic.py</code> and <code>prunemusic.py</code> for a ready-made <code>music.h</code>, kept with the project scripts); both use <code>atmsim.py</code> for the check.</p>
 <h2>8. Composition recipes that worked</h2>
 <h3>8.1 Drums (CH3 NOISE), copied from Italo Night</h3>
 <p>16-tick beats, all with <code>VOL</code> + <code>SL_VOL</code> + <code>DELAY</code>:</p>
@@ -1833,7 +1899,7 @@ Song questTheme[] = {     // total song bytes = 233
 <p><code>extras/tools/gen_quest.py</code> writes exactly this.</p>
 <h2>11. Using a song in a sketch</h2>
 <p>See <em>Quick start</em> and <em>API</em> at the top of this file. In short: <code>#include "song.h"</code>, create <code>ATMsynth ATM;</code>, call <code>ATM.play(&lt;array name&gt;)</code> in <code>setup()</code>.</p>
-<p><strong>Folder layout (current):</strong> <code>ATMlib/examples/loops/&lt;name&gt;/</code> for songs that loop forever (Italo Night, Escaper Droid, Neon Heart, Quest Theme, Star Light, inGameSongs), <code>ATMlib/examples/songs/&lt;name&gt;/</code> for one-shots and long songs (Cutlass Cove, Midnight Run, Orbital Rush), <code>ATMlib/examples/soundEffects/</code> for effects (<code>sfxDemo</code>: 45 poke + 45 <code>playSfx</code> effects and 5 songs). Each song is an Arduino sketch folder with <code>&lt;name&gt;.ino</code>, <code>song.h</code>, <code>ATMconfig.h</code>, <code>bitmaps.h</code>: duplicate an existing folder, rename the folder and the <code>.ino</code> (the Arduino IDE wants both to match), put the data in <code>song.h</code> and change <code>ATM.play(&lt;name&gt;)</code>.</p>
+<p><strong>Folder layout (current):</strong> <code>ATMlib/examples/loops/&lt;name&gt;/</code> for songs that loop forever (Italo Night, Italo Disco Compressed, Escaper Droid, Neon Heart, Quest Theme, Star Light, inGameSongs), <code>ATMlib/examples/songs/&lt;name&gt;/</code> for one-shots and long songs (Cutlass Cove, Midnight Run, Orbital Rush), <code>ATMlib/examples/soundEffects/</code> for effects (<code>sfxDemo</code>: 45 poke + 45 <code>playSfx</code> effects and 5 songs). Each song is an Arduino sketch folder with <code>&lt;name&gt;.ino</code>, <code>song.h</code>, <code>ATMconfig.h</code>, <code>bitmaps.h</code>: duplicate an existing folder, rename the folder and the <code>.ino</code> (the Arduino IDE wants both to match), put the data in <code>song.h</code> and change <code>ATM.play(&lt;name&gt;)</code>.</p>
 <p><strong>Several songs in one sketch:</strong> keep the song arrays in <code>PROGMEM</code> pointer arrays (see <code>examples/loops/inGameSongs</code>).</p>
 <h2>12. Mistakes made on this project (do not repeat)</h2>
 <ol>
@@ -1872,6 +1938,13 @@ Song questTheme[] = {     // total song bytes = 233
 <td>Italo disco, A minor, 8 bars</td>
 <td>469 B</td>
 <td>Written at emulator tempo 17 (now <code>SET_TEMPO(35)</code> in the file; use the doubled value). Kick + arp stabs on CH1, transposed SAW bass, noise drums with fills. Chords Am F C G Am F G E. <strong>Self-loop</strong> (was 558 B with STOP + <code>GOTO_ADV</code>).</td>
+</tr>
+<tr>
+<td><code>loops/italoDiscoCompressed</code></td>
+<td><code>italoDiscoCompressed</code></td>
+<td>Italo disco, A minor, 8 bars</td>
+<td>365 B</td>
+<td>Same song as <code>italoNight</code>, rewritten to be smaller (section 7.1): 16 tracks instead of 33, self-loop, <code>SET_TEMPO(35)</code>. Tick-for-tick identical playback. Generator pattern: <code>extras/tools/gen_quest.py</code>.</td>
 </tr>
 <tr>
 <td><code>loops/escaperDroid</code></td>
@@ -2189,7 +2262,7 @@ Song questTheme[] = {     // total song bytes = 233
 <li><strong>SOUNDFX:</strong> one pattern, one voice, no arrangement blocks. Choose <strong>Play as CH0 to CH3</strong> in the header (pulse / square / tone / noise). Export is <code>ATM_SFX_TRACK</code> for <code>ATM.playSfx(sfxTrack, ch)</code>. Switching between SONG and SFX asks for confirmation and starts from scratch.</li>
 </ul>
 <p><strong>Load</strong> accepts JSON and <code>song.h</code> files written with ATM commands. Macros such as <code>ATM_NOTE_A5_</code>, <code>ATM_SET_TRA(-5)</code>, <code>ATM_SL_VOL(-4)</code> are expanded. With several arrays in one file, the first valid score header is imported as four channel patterns on the song timeline. Very nested <code>GOTO</code> / <code>REPEAT</code> songs are flattened onto a 64-tick grid per channel so you can edit them.</p>
-<p><strong>Export</strong> as <strong>commands</strong> or <strong>hex</strong>: a SONG becomes <code>const uint8_t score[] PROGMEM</code> for <code>ATM.play(score)</code>, an SFX becomes <code>ATM_SFX_TRACK</code>. Rests and holds become <code>ATM_DELAY</code>; the arrangement becomes <code>ATM_GOTO</code> chains of pattern tracks.</p>
+<p><strong>Export</strong> as <strong>commands</strong> or <strong>hex</strong>: a SONG becomes <code>const uint8_t score[] PROGMEM</code> for <code>ATM.play(score)</code>, an SFX becomes <code>ATM_SFX_TRACK</code>. Rests and holds become <code>ATM_DELAY</code>; the arrangement becomes <code>ATM_GOTO</code> chains of pattern tracks. Tick <strong>Shrink song</strong> in the Export tab to make the song smaller without changing how it sounds (dead commands removed, repeated runs shared in extra tracks, see section 7.2).</p>
 <p><strong>Playback</strong> in the editor is Web Audio, not cycle-accurate to the AVR interrupt routine. For a device-faithful listen, compile a hex and run it in an emulator such as Ardens, or on hardware.</p>
 <p><strong>Keyboard:</strong> Space = play / stop; Left / Right = cursor in Pattern / Edit; Up / Down = piano octave; Del = clear the selected note; A-L + sharps / Z-M and Q-U = piano. Web MIDI is supported, and a computer-keyboard piano sits under the grid.</p>
 <div class="table-wrap"><table>

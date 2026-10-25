@@ -10,7 +10,7 @@
   #include "ATMconfig.h"
 #endif
 
-// Макросы обратной совместимости, если нет ATMconfig.h[cite: 8]
+
 #ifndef ATM_FX_VOLUME
 #define ATM_FX_VOLUME 1
 #endif
@@ -101,6 +101,15 @@
 #define ATM_OCTAVE_7 1
 #endif
 
+// Глубина стека вызовов (настраиваемая)[cite: 21]
+#ifndef ATM_STACK_DEPTH
+#define ATM_STACK_DEPTH 7
+#endif
+
+#if ATM_FUNC_PLAYPAUSE && (!ATM_FUNC_PAUSE || !ATM_FUNC_RESUME)
+#error ATM_FUNC_PLAYPAUSE needs ATM_FUNC_PAUSE and ATM_FUNC_RESUME
+#endif
+
 #define CH_ZERO             0
 #define CH_ONE              1
 #define CH_TWO              2
@@ -161,5 +170,5 @@ extern osc_t osc[4];
 uint16_t read_vle(const byte **pp);
 static inline const byte *getTrackPointer(byte track);
 
-extern void ATM_playroutine() asm("ATM_playroutine");
+extern void IRAM_ATTR ATM_playroutine();
 #endif
